@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCN – Unit 4.2: Internet Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --surface: #141728;
+    --surface2: #1c2035;
+    --border: #2a2f4a;
+    --blue: #4f9cf9;
+    --blue-glow: rgba(79,156,249,0.18);
+    --red: #ff5e6d;
+    --red-glow: rgba(255,94,109,0.15);
+    --green: #3ecf8e;
+    --green-glow: rgba(62,207,142,0.15);
+    --yellow: #f9c74f;
+    --purple: #b57bee;
+    --text: #e2e8f8;
+    --text-dim: #8892aa;
+    --heading: #ffffff;
+    --tag-bg: #1e2440;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Sora',sans-serif;
+    font-size:15px;
+    line-height:1.7;
+    min-height:100vh;
+  }
+
+  .site-header{position:relative;
+    background:linear-gradient(135deg,#0d0f1a 0%,#141728 40%,#1a1f38 100%);
+    border-bottom:1px solid var(--border);
+    padding:40px 24px 32px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .site-header::before{
+    content:'';
+    position:absolute;inset:0;
+    background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(79,156,249,0.12) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .unit-badge{
+    display:inline-block;
+    background:var(--blue-glow);
+    border:1px solid var(--blue);
+    color:var(--blue);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    padding:5px 16px;
+    border-radius:20px;
+    margin-bottom:16px;
+  }
+  .site-header h1{
+    font-size:clamp(28px,5vw,52px);
+    font-weight:800;
+    color:var(--heading);
+    letter-spacing:-1px;
+    line-height:1.1;
+  }
+  .site-header h1 span{color:var(--blue);}
+  .site-header p{
+    color:var(--text-dim);
+    margin-top:10px;
+    font-size:14px;
+  }
+
+  .toc{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+    padding:20px 16px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;
+  }
+  .toc a{
+    background:var(--tag-bg);
+    color:var(--text-dim);
+    border:1px solid var(--border);
+    padding:5px 13px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:600;
+    text-decoration:none;
+    letter-spacing:.5px;
+    transition:all .2s;
+  }
+  .toc a:hover{background:var(--blue-glow);border-color:var(--blue);color:var(--blue);}
+
+  .main{max-width:980px;margin:0 auto;padding:32px 16px 80px;}
+
+  .slide{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    margin-bottom:28px;
+    overflow:hidden;
+    transition:border-color .2s;
+  }
+  .slide:hover{border-color:var(--blue);}
+
+  .slide-header{
+    background:linear-gradient(90deg,var(--surface2),var(--surface));
+    border-bottom:1px solid var(--border);
+    padding:18px 24px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .slide-num{
+    background:var(--blue);
+    color:#fff;
+    font-weight:800;
+    font-size:12px;
+    min-width:32px;height:32px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .slide-title{
+    font-size:17px;font-weight:700;color:var(--heading);letter-spacing:-.3px;
+  }
+  .slide-body{padding:22px 24px;display:flex;flex-direction:column;gap:18px;}
+
+  .def-block{
+    background:var(--blue-glow);
+    border-left:3px solid var(--blue);
+    border-radius:0 10px 10px 0;
+    padding:14px 18px;
+  }
+  .def-block .label{
+    font-size:10px;font-weight:700;letter-spacing:2px;
+    color:var(--blue);text-transform:uppercase;margin-bottom:6px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .def-block p{color:#c8d8f8;font-size:14px;line-height:1.7;}
+
+  .points-block{
+    background:rgba(255,94,109,0.07);
+    border-left:3px solid var(--red);
+    border-radius:0 10px 10px 0;
+    padding:14px 18px;
+  }
+  .points-block .label{
+    font-size:10px;font-weight:700;letter-spacing:2px;
+    color:var(--red);text-transform:uppercase;margin-bottom:8px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .points-block ul{list-style:none;padding:0;}
+  .points-block li{
+    color:#f8d0d4;font-size:14px;padding:4px 0 4px 20px;position:relative;
+  }
+  .points-block li::before{
+    content:'▸';color:var(--red);
+    position:absolute;left:0;top:4px;font-size:12px;
+  }
+  .points-block li.imp::before{content:'👉';}
+  .points-block li.imp{color:#fff;font-weight:600;}
+
+  .example-block{
+    background:var(--green-glow);
+    border-left:3px solid var(--green);
+    border-radius:0 10px 10px 0;
+    padding:14px 18px;
+  }
+  .example-block .label{
+    font-size:10px;font-weight:700;letter-spacing:2px;
+    color:var(--green);text-transform:uppercase;margin-bottom:6px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .example-block p,.example-block li{color:#b8f0d8;font-size:14px;line-height:1.7;}
+  .example-block ul{padding-left:18px;margin-top:4px;}
+
+  .diagram-block{
+    background:rgba(181,123,238,0.08);
+    border-left:3px solid var(--purple);
+    border-radius:0 10px 10px 0;
+    padding:14px 18px;
+  }
+  .diagram-block .label{
+    font-size:10px;font-weight:700;letter-spacing:2px;
+    color:var(--purple);text-transform:uppercase;margin-bottom:10px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .flow-step{
+    display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;
+  }
+  .step-num{
+    background:var(--purple);color:#fff;
+    font-size:11px;font-weight:700;
+    min-width:24px;height:24px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    margin-top:1px;
+  }
+  .flow-step p{color:#dbbef8;font-size:14px;}
+  .flow-arrow{text-align:center;color:var(--purple);font-size:18px;margin:2px 0;}
+
+  .summary-block{
+    background:linear-gradient(90deg,rgba(249,199,79,0.1),rgba(249,199,79,0.03));
+    border:1px solid rgba(249,199,79,0.25);
+    border-radius:10px;
+    padding:12px 18px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .summary-block .icon{font-size:20px;flex-shrink:0;}
+  .summary-block p{color:var(--yellow);font-size:13px;line-height:1.6;}
+
+  .problem-block{
+    background:rgba(249,199,79,0.06);
+    border-left:3px solid var(--yellow);
+    border-radius:0 10px 10px 0;
+    padding:14px 18px;
+  }
+  .problem-block .label{
+    font-size:10px;font-weight:700;letter-spacing:2px;
+    color:var(--yellow);text-transform:uppercase;margin-bottom:8px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .problem-block p,.problem-block li{color:#fef3cc;font-size:14px;line-height:1.8;}
+  .problem-block ul{padding-left:18px;}
+  .step-box{
+    background:rgba(249,199,79,0.08);
+    border-radius:8px;padding:10px 14px;margin:8px 0;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;color:var(--yellow);
+  }
+
+  .comp-table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px;}
+  .comp-table th{
+    background:var(--surface2);color:var(--blue);
+    padding:9px 12px;text-align:left;
+    border:1px solid var(--border);font-weight:700;
+  }
+  .comp-table td{
+    padding:8px 12px;border:1px solid var(--border);
+    color:var(--text-dim);vertical-align:top;
+  }
+  .comp-table tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
+  .comp-table .good{color:var(--green);}
+  .comp-table .warn{color:var(--yellow);}
+  .comp-table .bad{color:var(--red);}
+
+  .formula{
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:8px;padding:12px 16px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;color:var(--yellow);
+    text-align:center;margin:8px 0;
+  }
+
+  .toc a.active{background:var(--blue-glow);border-color:var(--blue);color:var(--blue);}
+  .back-btn{position:absolute;top:20px;left:20px;z-index:10;display:inline-flex;align-items:center;gap:6px;background:rgba(79,156,249,0.1);border:1px solid rgba(79,156,249,0.3);color:var(--blue);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border-radius:20px;text-decoration:none;transition:all .2s;}
+  .back-btn:hover{background:rgba(79,156,249,0.2);border-color:var(--blue);}
+  .slide{scroll-margin-top:70px;}
+  @media(max-width:600px){
+    .slide-body{padding:16px;}
+    .toc{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="back-btn" href="index.html">← Home</a>
+  <div class="unit-badge">CCN · Unit 4.2</div>
+  <h1>Internet <span>Protocol</span></h1>
+  <p>IP Header · Fragmentation · Addressing · DHCP · NAT · ICMP · IPv6 &nbsp;·&nbsp; Exam Ready</p>
+</header>
+
+<nav class="toc">
+  <a href="#s1">S1: IP Overview</a>
+  <a href="#s2">S2: IPv4 Header</a>
+  <a href="#s3">S3: Header Fields</a>
+  <a href="#s4">S4: Protocol & Checksum</a>
+  <a href="#s5">S5: Fragmentation</a>
+  <a href="#s6">S6: Fragment Fields</a>
+  <a href="#s7">S7: Frag Example</a>
+  <a href="#s8">S8: Frag Challenges</a>
+  <a href="#s9">S9: IP Addressing</a>
+  <a href="#s10">S10: Subnets</a>
+  <a href="#s11">S11: CIDR</a>
+  <a href="#s12">S12: Classful & Broadcast</a>
+  <a href="#s13">S13: Aggregation</a>
+  <a href="#s14">S14: DHCP</a>
+  <a href="#s15">S15: DHCP Steps</a>
+  <a href="#s16">S16: NAT</a>
+  <a href="#s17">S17: NAT Working</a>
+  <a href="#s18">S18: NAT Issues</a>
+  <a href="#s19">S19: ICMP</a>
+  <a href="#s20">S20: ICMP Types</a>
+  <a href="#s21">S21: Traceroute</a>
+  <a href="#s22">S22: IPv6 Header</a>
+  <a href="#s23">S23: IPv6 Features</a>
+  <a href="#s24">S24: IPv6 Dropped Fields</a>
+  <a href="#s25">S25: IPv4→IPv6 Transition</a>
+  <a href="#s26">S26: Tunneling</a>
+  <a href="#cheatsheet">⭐ Cheat Sheet</a>
+</nav>
+
+<main class="main">
+
+<!-- ─────────────── SLIDE 1 ─────────────── -->
+<article class="slide" id="s1">
+  <div class="slide-header">
+    <div class="slide-num">1</div>
+    <div class="slide-title">Internet Protocol – Overview</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>Internet Protocol (IP)</strong> is the core protocol of the Network Layer. It defines how data is addressed, packaged, and delivered across interconnected networks.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 3 Important Modules of IP</div>
+      <ul>
+        <li class="imp"><strong>1. IP Protocol</strong> – Addressing conventions, datagram format, packet handling</li>
+        <li class="imp"><strong>2. Routing Component</strong> – Path selection using RIP, OSPF, BGP → builds forwarding table</li>
+        <li class="imp"><strong>3. ICMP</strong> – Error reporting and router "signaling"</li>
+        <li>Two versions: <strong>IPv4</strong> (32-bit address) and <strong>IPv6</strong> (128-bit address)</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>IP is like the <strong>addressing system of a city postal network</strong> — it defines the format of addresses, how letters (packets) are packed, and the rules for delivery.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> IP has 3 modules: IP Protocol, Routing, ICMP. Comes in IPv4 (32-bit) and IPv6 (128-bit).</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 2 ─────────────── -->
+<article class="slide" id="s2">
+  <div class="slide-header">
+    <div class="slide-num">2</div>
+    <div class="slide-title">IPv4 Datagram Header Format</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>IPv4 Header</strong> is a 20-byte structure (minimum) that contains all the control information needed to route and deliver an IP datagram — version, length, TTL, source & destination addresses, and more.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 IPv4 Header Layout (32 bits wide)</div>
+      <table class="comp-table" style="margin-top:8px;">
+        <tr><th>Field</th><th>Size</th><th>Purpose</th></tr>
+        <tr><td>Version</td><td>4 bits</td><td>IPv4 or IPv6?</td></tr>
+        <tr><td>Header Length</td><td>4 bits</td><td>Where does data start?</td></tr>
+        <tr><td>Type of Service</td><td>8 bits</td><td>QoS: low delay / high throughput</td></tr>
+        <tr><td>Datagram Length</td><td>16 bits</td><td>Total size (header + data)</td></tr>
+        <tr><td>16-bit Identifier</td><td>16 bits</td><td>Fragmentation ID</td></tr>
+        <tr><td>Flags</td><td>3 bits</td><td>Fragmentation control</td></tr>
+        <tr><td>Fragment Offset</td><td>13 bits</td><td>Position of fragment</td></tr>
+        <tr><td>Time to Live (TTL)</td><td>8 bits</td><td>Hop counter – prevents loops</td></tr>
+        <tr><td>Upper-layer Protocol</td><td>8 bits</td><td>TCP=6, UDP=17</td></tr>
+        <tr><td>Header Checksum</td><td>16 bits</td><td>Error detection in header</td></tr>
+        <tr><td>Source IP Address</td><td>32 bits</td><td>Sender's IP</td></tr>
+        <tr><td>Destination IP Address</td><td>32 bits</td><td>Receiver's IP</td></tr>
+        <tr><td>Options</td><td>Variable</td><td>Optional extensions</td></tr>
+        <tr><td>Data (Payload)</td><td>Variable</td><td>TCP/UDP segment or ICMP</td></tr>
+      </table>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Numbers</div>
+      <ul>
+        <li class="imp">Minimum header size = <strong>20 bytes</strong> (no options)</li>
+        <li class="imp">Maximum datagram size = <strong>65,535 bytes</strong> (16-bit length field)</li>
+        <li>Typical datagram ≤ 1500 bytes (limited by Ethernet MTU)</li>
+        <li class="imp">TCP + IP header overhead = <strong>40 bytes</strong> (20 + 20)</li>
+      </ul>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> IPv4 header = 20 bytes minimum. Has 13 fields. Max datagram = 65,535 bytes. TCP/IP = 40 bytes overhead.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 3 ─────────────── -->
+<article class="slide" id="s3">
+  <div class="slide-header">
+    <div class="slide-num">3</div>
+    <div class="slide-title">IPv4 Header Fields – Detailed Explanation</div>
+  </div>
+  <div class="slide-body">
+    <div class="points-block">
+      <div class="label">🔴 Field-by-Field Explanation</div>
+      <ul>
+        <li class="imp"><strong>Version (4 bits):</strong> Tells router which IP version → IPv4=4, IPv6=6. Router uses this to correctly interpret the rest of the datagram.</li>
+        <li class="imp"><strong>Header Length (4 bits):</strong> IPv4 allows variable options → this field tells router where the actual DATA begins. No options = 20-byte header.</li>
+        <li><strong>Type of Service (8 bits):</strong> Differentiates datagrams needing low delay, high throughput, or reliability. Distinguishes real-time (video call) vs non-real-time (email) traffic.</li>
+        <li class="imp"><strong>Datagram Length (16 bits):</strong> Total length = header + data. Max = 65,535 bytes. Rarely exceeds 1500 bytes in practice.</li>
+        <li class="imp"><strong>TTL (Time to Live):</strong> Decremented by 1 at every router. If TTL reaches 0 → packet is DROPPED. Prevents packets circulating forever in routing loops.</li>
+        <li><strong>Options:</strong> Allows IP header extension. Causes variable-length headers → dropped in IPv6 to simplify processing.</li>
+        <li><strong>Data/Payload:</strong> Usually a TCP or UDP segment. Can also carry ICMP messages.</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 TTL Example</div>
+      <p>A packet starts with TTL=64. Router 1 decrements → 63. Router 2 → 62. After 64 hops if not delivered → TTL=0 → packet dropped. This prevents infinite wandering.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> TTL prevents routing loops (drop at TTL=0). Version tells router IPv4 or IPv6. Header length tells where data starts. Options dropped in IPv6.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 4 ─────────────── -->
+<article class="slide" id="s4">
+  <div class="slide-header">
+    <div class="slide-num">4</div>
+    <div class="slide-title">Protocol Field & Header Checksum</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>Protocol field</strong> tells the destination what to do with the data payload. The <strong>Header Checksum</strong> detects bit errors in the IP header and must be recomputed at every router.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp"><strong>Protocol field value 6</strong> → pass data to <strong>TCP</strong></li>
+        <li class="imp"><strong>Protocol field value 17</strong> → pass data to <strong>UDP</strong></li>
+        <li>Protocol field is used only at the FINAL destination (not intermediate routers)</li>
+        <li class="imp"><strong>Checksum:</strong> Computed by treating every 2 bytes of header as a number → sum using 1s complement arithmetic</li>
+        <li>If checksum mismatch detected → router <strong>discards the datagram</strong></li>
+        <li class="imp">Checksum must be <strong>recomputed at every router</strong> because TTL changes at every hop</li>
+        <li>Why checksum if TCP already has one? → TCP checksum covers TCP segment only; IP checksum covers the IP header separately at each hop</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Protocol field = address label on a package that says "deliver to 3rd floor TCP department". Checksum = tamper-seal sticker — if broken (mismatch), throw away the package.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Protocol 6=TCP, 17=UDP. Checksum detects header errors → recomputed at every router because TTL changes. Mismatch → datagram dropped.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 5 ─────────────── -->
+<article class="slide" id="s5">
+  <div class="slide-header">
+    <div class="slide-num">5</div>
+    <div class="slide-title">IP Datagram Fragmentation</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>IP Fragmentation</strong> is the process of splitting a large datagram into smaller pieces (fragments) when it exceeds the <strong>MTU (Maximum Transmission Unit)</strong> of a link. Fragments are reassembled only at the destination host.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp"><strong>MTU</strong> = Maximum amount of data a link-layer frame can carry</li>
+        <li>Different links have different MTUs: Ethernet = 1500 bytes, Wide-area links = 576 bytes</li>
+        <li class="imp">If IP datagram > MTU of outgoing link → router <strong>fragments</strong> it</li>
+        <li class="imp">Reassembly happens at <strong>destination host ONLY</strong> (not at routers)</li>
+        <li>Reassembling at routers = too complex + slows routers down</li>
+        <li>TCP/UDP expect complete unfragmented segments from network layer</li>
+        <li class="imp">If one fragment is lost → entire datagram discarded → TCP retransmits</li>
+      </ul>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Fragmentation Flow</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Large datagram (4000 bytes) arrives at router</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">2</div><p>Outgoing link MTU = 1500 bytes → datagram TOO BIG</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">3</div><p>Router splits into <strong>3 fragments</strong>: 1480 + 1480 + 1020 bytes of data</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">4</div><p>Each fragment gets its own IP header with same ID, different offset</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">5</div><p>Destination receives all fragments → reassembles into original datagram ✅</p></div>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Sending a large book through mail: Post office cuts it into 3 parcels (fragments). Each parcel has same sender/receiver address and a number (offset) saying which chapter it contains. Recipient reassembles all 3 parcels into the full book.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Fragmentation = split datagram when > MTU. Fragments reassembled ONLY at destination. Lost fragment → discard all → TCP retransmits.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 6 ─────────────── -->
+<article class="slide" id="s6">
+  <div class="slide-header">
+    <div class="slide-num">6</div>
+    <div class="slide-title">Fragmentation Header Fields (ID, Flag, Offset)</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>Three fields in the IPv4 header manage fragmentation: <strong>Identifier</strong> (groups fragments), <strong>Flag</strong> (is there more?), and <strong>Fragment Offset</strong> (where does this piece go in the original).</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 3 Fragmentation Fields</div>
+      <ul>
+        <li class="imp"><strong>16-bit Identifier:</strong> Same ID stamped on ALL fragments of a datagram. Destination uses this to group fragments together.</li>
+        <li class="imp"><strong>Flag bit:</strong> <span style="color:#3ecf8e;">Flag=1</span> means "more fragments coming". <span style="color:#ff5e6d;">Flag=0</span> means "this is the LAST fragment".</li>
+        <li class="imp"><strong>13-bit Fragment Offset:</strong> Tells the byte position where this fragment's data starts in the original datagram. Measured in units of <strong>8 bytes</strong>.</li>
+        <li>Each resulting fragment gets: same source address, same destination, same identifier</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p><strong>ID</strong> = Book title (all parcels say "Harry Potter Vol 1"). <strong>Flag=1</strong> = "more chapters coming". <strong>Flag=0</strong> = "this is the last parcel". <strong>Offset</strong> = "Chapter 3 starts here (at page 180)".</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> ID groups fragments. Flag=1 → more coming. Flag=0 → last fragment. Offset tells position in original datagram (in units of 8 bytes).</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 7 ─────────────── -->
+<article class="slide" id="s7">
+  <div class="slide-header">
+    <div class="slide-num">7</div>
+    <div class="slide-title">Fragmentation – Numerical Example</div>
+  </div>
+  <div class="slide-body">
+    <div class="problem-block">
+      <div class="label">📐 Given Problem</div>
+      <p><strong>Original datagram:</strong> 4000 bytes total = 20 bytes IP header + 3980 bytes data<br>
+      <strong>Link MTU:</strong> 1500 bytes &nbsp;|&nbsp; <strong>Identifier:</strong> 777</p>
+      <p style="margin-top:10px;font-weight:600;">How many fragments? What are their sizes and offsets?</p>
+      <div class="step-box">
+        Max data per fragment = MTU - IP header = 1500 - 20 = 1480 bytes
+        But fragment data must be multiple of 8: 1480 ÷ 8 = 185 ✅ (exact)
+        
+        Fragment 1: 1480 bytes data  → Offset = 0/8 = 0     | Flag = 1
+        Fragment 2: 1480 bytes data  → Offset = 1480/8 = 185 | Flag = 1
+        Fragment 3: 1020 bytes data  → Offset = 2960/8 = 370 | Flag = 0 (last)
+        
+        Check: 1480 + 1480 + 1020 = 3980 bytes ✅ (original data)
+      </div>
+      <table class="comp-table" style="margin-top:12px;">
+        <tr><th>Fragment</th><th>Data Bytes</th><th>ID</th><th>Offset</th><th>Flag</th></tr>
+        <tr><td>1st</td><td>1480</td><td>777</td><td class="good">0</td><td class="warn">1 (more)</td></tr>
+        <tr><td>2nd</td><td>1480</td><td>777</td><td class="good">185</td><td class="warn">1 (more)</td></tr>
+        <tr><td>3rd</td><td>1020</td><td>777</td><td class="good">370</td><td class="good">0 (last)</td></tr>
+      </table>
+      <p style="margin-top:14px;font-weight:600;color:#f9c74f;">Practice Problem 1:</p>
+      <p>Datagram = 5000 bytes total (20 byte header + 4980 bytes data). MTU = 1500. ID = 999. Find fragments, offsets, and flags.</p>
+      <p style="color:#f9c74f;font-size:13px;margin-top:6px;">Answer: Frag1: 1480 data, offset=0, flag=1 | Frag2: 1480 data, offset=185, flag=1 | Frag3: 1480 data, offset=370, flag=1 | Frag4: 540 data, offset=555, flag=0 ✅</p>
+      <p style="margin-top:10px;font-weight:600;color:#f9c74f;">Practice Problem 2:</p>
+      <p>Datagram = 2980 bytes (20 header + 2960 data). MTU = 1000. ID = 555. Find fragments.</p>
+      <p style="color:#f9c74f;font-size:13px;margin-top:6px;">Answer: Max data = 980 bytes (980÷8=122.5, round down to 120×8=960). Frag1: 960 data, offset=0, flag=1 | Frag2: 960 data, offset=120, flag=1 | Frag3: 1040 data, offset=240, flag=0 ✅</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Offset = cumulative data bytes ÷ 8. Last fragment flag=0, all others flag=1. Max data per fragment = MTU - 20 (header), must be multiple of 8.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 8 ─────────────── -->
+<article class="slide" id="s8">
+  <div class="slide-header">
+    <div class="slide-num">8</div>
+    <div class="slide-title">Fragmentation – Challenges & IPv6</div>
+  </div>
+  <div class="slide-body">
+    <div class="points-block">
+      <div class="label">🔴 Challenges of Fragmentation</div>
+      <ul>
+        <li>Complicates both routers and end systems (complex code needed)</li>
+        <li class="imp"><strong>DoS Attack Risk:</strong> Fragmentation can be exploited — Jolt2 attack sends stream of tiny fragments with no fragment having offset=0 → target host collapses trying to reassemble</li>
+        <li>Another attack: sends <strong>overlapping fragments</strong> with wrong offset values → fragments don't align → system crashes</li>
+        <li class="imp"><strong>IPv6 solution:</strong> Fragmentation is <strong>completely removed</strong> from IPv6 routers → only source and destination handle fragmentation → speeds up IP forwarding</li>
+        <li>In IPv6: if packet too big, router drops it and sends "Packet Too Big" ICMP → sender resends with smaller size</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>IPv4 fragmentation = post office cutting and reassembling your packages in transit (messy, attack-prone). IPv6 = you cut the package yourself before sending, and post office just delivers — simpler and safer.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Fragmentation enables DoS attacks (Jolt2). IPv6 removes fragmentation from routers entirely. Source handles sizing in IPv6.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 9 ─────────────── -->
+<article class="slide" id="s9">
+  <div class="slide-header">
+    <div class="slide-num">9</div>
+    <div class="slide-title">IP Addressing – Basics</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>An <strong>IP Address</strong> is a 32-bit number uniquely identifying an interface (not a host). Every interface on every device in the Internet must have a globally unique IP address. Written in <strong>dotted-decimal notation</strong>.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">IP address = <strong>32 bits</strong> = 2³² = approx <strong>4 billion</strong> possible addresses</li>
+        <li class="imp">IP address belongs to an <strong>interface</strong>, not to the host/router itself</li>
+        <li>A router has <strong>multiple interfaces</strong> → multiple IP addresses</li>
+        <li>A host typically has <strong>one interface</strong> → one IP address</li>
+        <li>Boundary between host and physical link = <strong>interface</strong></li>
+        <li class="imp">Each interface must have a <strong>globally unique</strong> IP address</li>
+      </ul>
+    </div>
+    <div class="problem-block">
+      <div class="label">📐 Dotted Decimal Example</div>
+      <div class="step-box">
+        IP Address: 193.32.216.9
+        Binary:     11000001 00100000 11011000 00001001
+        
+        Each group = 8 bits (1 byte) = value 0 to 255
+        4 groups × 8 bits = 32 bits total ✅
+      </div>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> IP = 32 bits = ~4 billion addresses. Belongs to interface, not host. Each interface has globally unique IP. Written as 4 dotted decimal numbers.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 10 ─────────────── -->
+<article class="slide" id="s10">
+  <div class="slide-header">
+    <div class="slide-num">10</div>
+    <div class="slide-title">Subnets</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A <strong>subnet</strong> is a group of devices (interfaces) that share the same network prefix and can communicate directly without a router in between. Identified using a <strong>subnet mask (/x notation)</strong>.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp"><strong>Subnet mask /24</strong> → leftmost 24 bits are same (network portion), last 8 bits differ (host portion)</li>
+        <li>Example: 223.1.1.0/24 → hosts 223.1.1.1, 223.1.1.2, 223.1.1.3 are all in same subnet</li>
+        <li class="imp">To find subnets: <strong>detach all interfaces</strong> from hosts/routers → each isolated island = one subnet</li>
+        <li>Interfaces in same subnet connected by Ethernet switch (no router needed)</li>
+      </ul>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Subnet Example Network (3 Routers)</div>
+      <div class="flow-step"><div class="step-num">1</div><p>R1 connects: subnet 223.1.1.0/24 (3 hosts) + links to R2 and R3</p></div>
+      <div class="flow-step"><div class="step-num">2</div><p>R2 connects: subnet 223.1.2.0/24 (2 hosts) + links to R1 and R3</p></div>
+      <div class="flow-step"><div class="step-num">3</div><p>R3 connects: subnet 223.1.3.0/24 (2 hosts) + links to R1 and R2</p></div>
+      <div class="flow-step"><div class="step-num">4</div><p>R1-R2 link = subnet 223.1.9.0/24 &nbsp;|&nbsp; R1-R3 link = subnet 223.1.7.0/24 &nbsp;|&nbsp; R2-R3 link = subnet 223.1.8.0/24</p></div>
+      <p style="color:#dbbef8;margin-top:8px;font-size:13px;"><strong>Total subnets = 6</strong> (3 host subnets + 3 router-link subnets)</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Subnet = group of interfaces with same network prefix. /24 = 24-bit network. To count subnets: detach all interfaces → count isolated islands.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 11 ─────────────── -->
+<article class="slide" id="s11">
+  <div class="slide-header">
+    <div class="slide-num">11</div>
+    <div class="slide-title">CIDR – Classless Interdomain Routing</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>CIDR</strong> (pronounced "cider") is the Internet's address assignment strategy where a 32-bit IP address is split into a network prefix (first x bits) and host portion (remaining bits), written as <strong>a.b.c.d/x</strong>.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Format: <strong>a.b.c.d/x</strong> where x = number of network prefix bits</li>
+        <li class="imp">The x leading bits = <strong>network prefix</strong>. Routers OUTSIDE an organization only look at these x bits.</li>
+        <li>Remaining 32-x bits = host identifier within the organization</li>
+        <li class="imp">Organization gets a <strong>contiguous block of addresses</strong> with a common prefix → reduces forwarding table size</li>
+        <li>One entry <strong>a.b.c.d/x</strong> can represent ALL addresses inside an organization</li>
+        <li>IP addresses managed by <strong>ICANN</strong> (Internet Corporation for Assigned Names and Numbers)</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Example</div>
+      <p>ISP block: <strong>200.23.16.0/20</strong> (20-bit prefix). ISP sub-divides into 8 organizations each getting /23: 200.23.16.0/23, 200.23.18.0/23, 200.23.20.0/23 ... etc. External routers only need to remember one /20 entry for all 8 orgs.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> CIDR = a.b.c.d/x. First x bits = network prefix. External routers only see x bits → smaller routing tables. ICANN manages IP allocation.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 12 ─────────────── -->
+<article class="slide" id="s12">
+  <div class="slide-header">
+    <div class="slide-num">12</div>
+    <div class="slide-title">Classful Addressing & Broadcast Address</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Classful Addressing</strong> was the old system where network portion was fixed at 8, 16, or 24 bits — called Class A, B, C. Replaced by CIDR which allows flexible prefix lengths.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Classes and Sizes</div>
+      <ul>
+        <li class="imp"><strong>Class A (/8):</strong> 24-bit host portion → 2²⁴ - 2 = 16,777,214 hosts (huge orgs)</li>
+        <li class="imp"><strong>Class B (/16):</strong> 16-bit host portion → 2¹⁶ - 2 = 65,534 hosts (medium)</li>
+        <li class="imp"><strong>Class C (/24):</strong> 8-bit host portion → 2⁸ - 2 = 254 hosts (small orgs)</li>
+        <li>(We subtract 2: one for network address, one for broadcast)</li>
+        <li class="imp"><strong>Broadcast Address: 255.255.255.255</strong> → message sent to ALL hosts on same subnet</li>
+        <li>Classful was wasteful (e.g., Class B wastes 65K addresses for org needing only 300)</li>
+        <li>CIDR solved this by allowing any prefix length</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Example</div>
+      <p>Class C: 192.168.1.0/24 → hosts 192.168.1.1 to 192.168.1.254 (254 hosts). Network = 192.168.1.0. Broadcast = 192.168.1.255.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Class A=/8 (16M hosts), Class B=/16 (65K hosts), Class C=/24 (254 hosts). Broadcast = 255.255.255.255. Classful replaced by flexible CIDR.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 13 ─────────────── -->
+<article class="slide" id="s13">
+  <div class="slide-header">
+    <div class="slide-num">13</div>
+    <div class="slide-title">Address Aggregation (Route Summarization)</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Address Aggregation</strong> (also called route aggregation or route summarization) is the ability to advertise multiple networks using a single prefix — reducing the number of routing table entries.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Works when addresses are allocated hierarchically: ISP → organizations</li>
+        <li>ISP advertises one /20 prefix instead of 8 separate /23 prefixes</li>
+        <li class="imp">External routers only need ONE entry to reach all orgs under that ISP</li>
+        <li>When org moves to a different ISP → <strong>more specific route problem:</strong> both old and new ISP advertise, but longer prefix (more specific) wins → Longest Prefix Match applies</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Example</div>
+      <p>Fly-By-Night-ISP has 8 organizations each with /23. Instead of advertising 8 entries, they advertise ONE: <strong>200.23.16.0/20</strong>. Internet routers send all 200.23.x traffic to this ISP using just one route entry.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Route aggregation = one prefix for many orgs → smaller routing tables. When specific conflict arises, longest prefix match wins.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 14 ─────────────── -->
+<article class="slide" id="s14">
+  <div class="slide-header">
+    <div class="slide-num">14</div>
+    <div class="slide-title">DHCP – Dynamic Host Configuration Protocol</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>DHCP</strong> is a <em>plug-and-play</em> client-server protocol that automatically assigns IP addresses and other network configuration to hosts when they join a network — no manual configuration needed.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">DHCP can assign <strong>same IP every time</strong> (fixed) or <strong>different IP each time</strong> (dynamic/temporary)</li>
+        <li class="imp">DHCP also provides: <strong>subnet mask, default gateway (first-hop router), DNS server address</strong></li>
+        <li>Called <strong>plug-and-play</strong> because host just connects → automatically gets config</li>
+        <li>Used heavily in: WiFi networks, home routers, campus networks</li>
+        <li class="imp">Each subnet needs: a DHCP server OR a <strong>DHCP relay agent</strong> (typically the router)</li>
+        <li>Challenge: mobile node moving between subnets gets new IP → TCP connections break</li>
+        <li class="imp">DHCP efficiency: 2000 customers, only 400 online → DHCP needs only 512 addresses (a.b.c.d/23), not 2048</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>DHCP = Hotel front desk: you check in (connect) → desk assigns you room number (IP address) + gives you WiFi password, breakfast timing, checkout time (gateway, DNS, lease duration). You don't configure anything manually.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> DHCP = auto IP assignment. Provides IP, subnet mask, gateway, DNS. Plug-and-play. Dynamic allocation saves addresses. Relay agent if no local DHCP server.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 15 ─────────────── -->
+<article class="slide" id="s15">
+  <div class="slide-header">
+    <div class="slide-num">15</div>
+    <div class="slide-title">DHCP – 4-Step Process</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>DHCP works through a <strong>4-step handshake</strong> between the new client and DHCP server: Discover → Offer → Request → ACK. After ACK, client uses the IP for the <strong>lease duration</strong>.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 DHCP 4-Step Flow</div>
+      <div class="flow-step"><div class="step-num">1</div><p><strong>DHCP Discover:</strong> New client broadcasts "Is there a DHCP server?" (src: 0.0.0.0, dest: 255.255.255.255)</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">2</div><p><strong>DHCP Offer:</strong> Server replies with proposed IP address + lease duration (e.g., yiaddr: 223.1.2.4, Lifetime: 3600 secs)</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">3</div><p><strong>DHCP Request:</strong> Client accepts the offer by broadcasting (confirms which server's offer it accepts)</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">4</div><p><strong>DHCP ACK:</strong> Server confirms → client now uses the IP address for the lease period ✅</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Details</div>
+      <ul>
+        <li class="imp">Steps 1 and 3 use <strong>broadcast</strong> (dest: 255.255.255.255) because client has no IP yet</li>
+        <li>Steps 2 and 4 are server → client (unicast after offer)</li>
+        <li class="imp">After lease expires → client must renew or get new address</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Memory Trick</div>
+      <p><strong>DORA</strong> = Discover → Offer → Request → ACK. Easy to remember!</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> DHCP = DORA (Discover, Offer, Request, ACK). Client broadcasts first 2 steps (no IP yet). After ACK = IP assigned for lease duration.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 16 ─────────────── -->
+<article class="slide" id="s16">
+  <div class="slide-header">
+    <div class="slide-num">16</div>
+    <div class="slide-title">NAT – Network Address Translation</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>NAT</strong> allows a private network (home/office) to use private IP addresses internally while sharing a single public IP address for all communication with the Internet. The NAT router translates between private and public addresses.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Private addresses (e.g., 10.0.0.0/24) have meaning <strong>only inside</strong> the private network</li>
+        <li class="imp">NAT router appears to outside world as a <strong>single device with ONE public IP</strong></li>
+        <li>NAT router <strong>hides</strong> internal network structure from outside</li>
+        <li>Router gets public IP from ISP's DHCP server</li>
+        <li>Router runs its own DHCP server to assign private IPs to home devices</li>
+        <li class="imp">NAT uses a <strong>NAT Translation Table</strong> that stores: WAN-side (public IP + port) ↔ LAN-side (private IP + port)</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>A company building with many employees (private IPs = internal extensions). Outside world only knows ONE main phone number (public IP). Receptionist (NAT router) routes calls in and out, keeping an internal log (NAT table) of who called whom.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> NAT = one public IP for many private devices. NAT table maps private IP:port ↔ public IP:port. Hides internal network from Internet.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 17 ─────────────── -->
+<article class="slide" id="s17">
+  <div class="slide-header">
+    <div class="slide-num">17</div>
+    <div class="slide-title">NAT – How It Works (Step-by-Step)</div>
+  </div>
+  <div class="slide-body">
+    <div class="diagram-block">
+      <div class="label">📊 NAT Example Flow</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Home device (10.0.0.1) requests web server (128.119.40.186:80) using src port 3345. Sends packet with <strong>src: 10.0.0.1:3345</strong></p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">2</div><p>NAT router receives packet → generates new src port <strong>5001</strong> → replaces src IP with public IP <strong>138.76.29.7</strong>. Packet now shows src: 138.76.29.7:5001</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">3</div><p>NAT table updated: <strong>138.76.29.7:5001 ↔ 10.0.0.1:3345</strong></p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">4</div><p>Web server responds to <strong>138.76.29.7:5001</strong> (doesn't know private IP)</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">5</div><p>NAT router receives response → looks up table → translates dest back to <strong>10.0.0.1:3345</strong> → forwards to home device ✅</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">NAT can select any port number <strong>not already in NAT table</strong></li>
+        <li>Web server is unaware that NAT manipulation happened</li>
+        <li class="imp">16-bit port field → up to <strong>65,535 simultaneous connections</strong> on ONE public IP!</li>
+      </ul>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> NAT replaces private IP:port → public IP:new-port. Stores mapping in table. Return traffic translated back. Web server sees only public IP.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 18 ─────────────── -->
+<article class="slide" id="s18">
+  <div class="slide-header">
+    <div class="slide-num">18</div>
+    <div class="slide-title">NAT – Issues & Controversies</div>
+  </div>
+  <div class="slide-body">
+    <div class="points-block">
+      <div class="label">🔴 Problems with NAT</div>
+      <ul>
+        <li class="imp"><strong>Port number misuse:</strong> Port numbers meant for addressing <em>processes</em>, not hosts → NAT uses them for host addressing → violates design</li>
+        <li class="imp"><strong>Violates end-to-end argument:</strong> Hosts should talk directly. NAT forces a middleman to modify IP addresses and port numbers → breaks peer-to-peer principle</li>
+        <li class="imp"><strong>P2P problems:</strong> NAT interferes with P2P apps (BitTorrent, VoIP) because external peers cannot initiate connections to a NATted private host</li>
+        <li><strong>Correct fix:</strong> Use <strong>IPv6</strong> (128-bit addresses → enough for all devices) instead of NAT as a stopgap solution</li>
+        <li>Despite its issues → NAT has become an important and widely deployed component of the Internet</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>NAT = a shared telephone extension at a hotel. Great for making outgoing calls. Problem: if someone outside wants to call specifically YOU (not the hotel), they can't — they only have the hotel's main number. P2P = both parties need to call each other directly.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> NAT violates end-to-end principle. Breaks P2P apps. Port numbers misused. Proper solution = IPv6. But NAT is already everywhere in practice.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 19 ─────────────── -->
+<article class="slide" id="s19">
+  <div class="slide-header">
+    <div class="slide-num">19</div>
+    <div class="slide-title">ICMP – Internet Control Message Protocol</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>ICMP</strong> is used by hosts and routers to communicate network-layer error and control information to each other. It is considered part of IP — ICMP messages are carried <em>inside</em> IP datagrams as payload.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Most common use = <strong>Error reporting</strong> (e.g., "Destination network unreachable")</li>
+        <li class="imp">ICMP lies <strong>just above IP</strong> → ICMP messages are IP payload (like TCP/UDP segments)</li>
+        <li>Each ICMP message has: <strong>Type field</strong> + <strong>Code field</strong> + first 8 bytes of offending IP datagram</li>
+        <li class="imp"><strong>ping</strong> command uses ICMP Type 8 Code 0 (echo request) → destination replies with Type 0 Code 0 (echo reply)</li>
+        <li>ICMP source quench message (Type 4) → used for congestion control: congested router tells source to slow down</li>
+        <li>TCP has its own congestion control → ICMP source quench rarely used now</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>ICMP = error notification system of the Internet. Like a delivery agent calling back to say "address not found" (Destination Unreachable), or "package returned because time expired" (TTL Expired).</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> ICMP = error reporting protocol. Travels inside IP datagrams. Has Type + Code fields. ping uses Type 8. "Destination unreachable" = Type 3.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 20 ─────────────── -->
+<article class="slide" id="s20">
+  <div class="slide-header">
+    <div class="slide-num">20</div>
+    <div class="slide-title">ICMP Message Types – Quick Reference</div>
+  </div>
+  <div class="slide-body">
+    <table class="comp-table">
+      <tr><th>ICMP Type</th><th>Code</th><th>Description</th></tr>
+      <tr><td class="good">0</td><td>0</td><td class="good">Echo Reply (response to ping)</td></tr>
+      <tr><td class="warn">3</td><td>0</td><td>Destination Network Unreachable</td></tr>
+      <tr><td class="warn">3</td><td>1</td><td>Destination Host Unreachable</td></tr>
+      <tr><td class="warn">3</td><td>2</td><td>Destination Protocol Unreachable</td></tr>
+      <tr><td class="warn">3</td><td class="bad">3</td><td class="bad">Destination Port Unreachable (used by Traceroute to stop)</td></tr>
+      <tr><td class="warn">3</td><td>6</td><td>Destination Network Unknown</td></tr>
+      <tr><td class="warn">3</td><td>7</td><td>Destination Host Unknown</td></tr>
+      <tr><td>4</td><td>0</td><td>Source Quench (congestion control)</td></tr>
+      <tr><td class="good">8</td><td>0</td><td class="good">Echo Request (ping sends this)</td></tr>
+      <tr><td>9</td><td>0</td><td>Router Advertisement</td></tr>
+      <tr><td>10</td><td>0</td><td>Router Discovery</td></tr>
+      <tr><td class="bad">11</td><td>0</td><td class="bad">TTL Expired (Traceroute uses this)</td></tr>
+      <tr><td>12</td><td>0</td><td>IP Header Bad</td></tr>
+    </table>
+    <div class="points-block" style="margin-top:12px;">
+      <div class="label">🔴 Must Remember</div>
+      <ul>
+        <li class="imp">ping = Type 8 (request) + Type 0 (reply)</li>
+        <li class="imp">TTL expired = Type 11 → used by Traceroute</li>
+        <li class="imp">Port unreachable = Type 3, Code 3 → Traceroute stop signal</li>
+        <li class="imp">Destination unreachable = Type 3 (many codes)</li>
+      </ul>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> ping = Type 8/0. TTL expired = Type 11. Dest unreachable = Type 3. Source quench = Type 4. Memorize these for exams.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 21 ─────────────── -->
+<article class="slide" id="s21">
+  <div class="slide-header">
+    <div class="slide-num">21</div>
+    <div class="slide-title">Traceroute – How It Works</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Traceroute</strong> is a program that discovers the route (all intermediate routers) from source to destination using ICMP messages and the TTL mechanism.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Traceroute Step-by-Step</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Source sends datagram with <strong>TTL=1</strong> (with unusual UDP port number). Timer started.</p></div>
+      <div class="flow-step"><div class="step-num">2</div><p>Router 1 decrements TTL → TTL=0 → drops packet → sends <strong>ICMP Type 11 (TTL Expired)</strong> back with its IP address and name</p></div>
+      <div class="flow-step"><div class="step-num">3</div><p>Source records Router 1's info + round-trip time. Then sends TTL=2 datagram.</p></div>
+      <div class="flow-step"><div class="step-num">4</div><p>Router 2 causes Type 11 → Source records Router 2. Then TTL=3 ... continues</p></div>
+      <div class="flow-step"><div class="step-num">5</div><p>Eventually datagram reaches <strong>destination</strong>. Unusual port number → destination sends <strong>ICMP Type 3 Code 3</strong> (Port Unreachable) → Traceroute knows to STOP</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Traceroute reveals: names + IPs of all intermediate routers + round-trip times</li>
+        <li class="imp">Stop signal = ICMP Type 3 Code 3 (Port Unreachable) from destination</li>
+        <li>Uses <strong>UDP segment with unlikely port number</strong> (so normal services don't respond)</li>
+        <li>Sends 3 probes at each TTL value → shows 3 RTT measurements per hop</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Traceroute = sending a letter that expires after visiting 1 post office. Post office sends back "letter expired here". Then you send one that expires after 2, then 3... each time learning which post office handled it and how long it took.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Traceroute uses TTL=1,2,3... ICMP Type 11 reveals each hop. Stops when Type 3 Code 3 (Port Unreachable) received from destination. Shows full path + RTT.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 22 ─────────────── -->
+<article class="slide" id="s22">
+  <div class="slide-header">
+    <div class="slide-num">22</div>
+    <div class="slide-title">IPv6 – Header Format</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>IPv6</strong> was created to solve the IPv4 address exhaustion problem by expanding addresses to <strong>128 bits</strong>. It has a streamlined <strong>fixed 40-byte header</strong> (no options field) for faster processing.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 IPv6 Header Fields (32 bits wide)</div>
+      <table class="comp-table" style="margin-top:8px;">
+        <tr><th>Field</th><th>Size</th><th>Purpose</th></tr>
+        <tr><td>Version</td><td>4 bits</td><td>IPv6 = 6</td></tr>
+        <tr><td>Traffic Class</td><td>8 bits</td><td>Like TOS in IPv4 – priority/QoS</td></tr>
+        <tr><td>Flow Label</td><td>20 bits</td><td>Labels packets of same "flow" for special handling</td></tr>
+        <tr><td>Payload Length</td><td>16 bits</td><td>Number of bytes after the 40-byte header</td></tr>
+        <tr><td>Next Header</td><td>8 bits</td><td>Protocol above (TCP=6, UDP=17) – like IPv4 Protocol field</td></tr>
+        <tr><td>Hop Limit</td><td>8 bits</td><td>Like TTL – decremented each hop, discard at 0</td></tr>
+        <tr><td>Source Address</td><td>128 bits</td><td>Sender's IPv6 address</td></tr>
+        <tr><td>Destination Address</td><td>128 bits</td><td>Receiver's IPv6 address</td></tr>
+        <tr><td>Data</td><td>Variable</td><td>Payload</td></tr>
+      </table>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Numbers</div>
+      <ul>
+        <li class="imp">IPv6 address = <strong>128 bits</strong> = 2¹²⁸ addresses (astronomically large)</li>
+        <li class="imp">Fixed header = <strong>40 bytes</strong> (no options, no variable length)</li>
+        <li>Faster processing: no checksum recomputation, no fragmentation at routers</li>
+      </ul>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> IPv6 = 128-bit addresses, fixed 40-byte header. Has Version, Traffic Class, Flow Label, Payload Length, Next Header, Hop Limit, Src/Dest addresses.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 23 ─────────────── -->
+<article class="slide" id="s23">
+  <div class="slide-header">
+    <div class="slide-num">23</div>
+    <div class="slide-title">IPv6 – Unique New Features</div>
+  </div>
+  <div class="slide-body">
+    <div class="points-block">
+      <div class="label">🔴 Key New Features in IPv6</div>
+      <ul>
+        <li class="imp"><strong>Expanded Addressing:</strong> 128-bit addresses (vs 32-bit IPv4) = virtually unlimited address space</li>
+        <li class="imp"><strong>Anycast Address:</strong> New address type → datagram delivered to <em>any ONE</em> of a group of hosts (not broadcast, not multicast)</li>
+        <li class="imp"><strong>Flow Labeling:</strong> Packets of the same "flow" (e.g., video stream) can be labeled for special handling (real-time, non-default QoS)</li>
+        <li><strong>Traffic Class field:</strong> Give priority to certain datagrams within a flow (like ICMP over regular data)</li>
+        <li class="imp"><strong>Fixed 40-byte header:</strong> No options, no variable length → router processing MUCH faster</li>
+        <li>New ICMP version: <strong>ICMPv6</strong> (adds "Packet Too Big" type, "Unrecognized options" code, subsumes IGMP)</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Anycast Example</div>
+      <p>Anycast = asking "nearest Google DNS server" — IPv6 routes to whichever DNS server in the anycast group is closest to you. Unlike multicast (send to ALL) or unicast (send to ONE specific).</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> IPv6 adds: 128-bit addressing, anycast, flow labels, traffic class. Fixed 40-byte header = faster routing. ICMPv6 replaces ICMPv4.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 24 ─────────────── -->
+<article class="slide" id="s24">
+  <div class="slide-header">
+    <div class="slide-num">24</div>
+    <div class="slide-title">IPv6 – Fields Dropped from IPv4</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>IPv6 deliberately <strong>removed 3 fields</strong> from IPv4 to simplify processing, speed up forwarding, and improve security.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 3 Dropped Fields and Why</div>
+      <ul>
+        <li class="imp"><strong>1. Fragmentation/Reassembly REMOVED:</strong> IPv6 routers do NOT fragment. If too big → router drops datagram → sends "Packet Too Big" ICMPv6 message → source resends smaller. Moving this to end systems speeds up routers significantly.</li>
+        <li class="imp"><strong>2. Header Checksum REMOVED:</strong> Transport (TCP/UDP) and link-layer already do checksums → redundant at IP layer. Also: IPv4 checksum must be recomputed at every router (TTL changes) → slow. Removing it speeds up routing.</li>
+        <li class="imp"><strong>3. Options field REMOVED:</strong> Options made headers variable-length → routers couldn't predict where data starts → slow. IPv6 options handled via "Next Header" chain (extension headers).</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>IPv6 is like a streamlined delivery service that removed "package inspection at every stop" (checksum), "splitting packages mid-route" (fragmentation), and "custom instructions attached" (options) → making it much faster to process.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> IPv6 dropped: Fragmentation (now at source only), Checksum (redundant), Options (variable header issue). Result = faster router processing.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 25 ─────────────── -->
+<article class="slide" id="s25">
+  <div class="slide-header">
+    <div class="slide-num">25</div>
+    <div class="slide-title">IPv4 → IPv6 Transition: Dual Stack</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The Internet cannot switch to IPv6 overnight — billions of IPv4 devices exist. Two transition strategies exist: <strong>Dual Stack</strong> (speak both) and <strong>Tunneling</strong> (carry IPv6 inside IPv4).</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Dual Stack Approach</div>
+      <ul>
+        <li class="imp">IPv6 nodes also have a <strong>complete IPv4 implementation</strong> (can speak both)</li>
+        <li class="imp">When talking to IPv4-only node → use IPv4 datagrams. When talking to IPv6 node → use IPv6 datagrams.</li>
+        <li>If either sender or receiver is IPv4-only → must use IPv4 datagram</li>
+        <li class="imp"><strong>Problem:</strong> Converting IPv6→IPv4 loses IPv6-specific fields (flow label, etc.) — information is permanently lost</li>
+        <li>Two IPv6-capable nodes may still end up using IPv4 if there's an IPv4-only router in between</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Dual Stack = being bilingual. You speak English (IPv6) or Hindi (IPv4) depending on who you're talking to. But if you translate a complex English sentence to Hindi and the Hindi has no word for it — some meaning is lost forever.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Dual Stack = node supports both IPv4 and IPv6. Picks correct version based on who it talks to. IPv6→IPv4 conversion loses IPv6-specific fields.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── SLIDE 26 ─────────────── -->
+<article class="slide" id="s26">
+  <div class="slide-header">
+    <div class="slide-num">26</div>
+    <div class="slide-title">IPv6 Tunneling</div>
+  </div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Tunneling</strong> is a technique where an IPv6 datagram is placed entirely inside the payload of an IPv4 datagram to cross an IPv4-only region of the Internet. The IPv4 network acts as a "tunnel".</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Tunneling Flow: A (IPv6) → B (IPv6) via IPv4 Tunnel</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Node <strong>A</strong> (IPv6) sends IPv6 datagram to Node <strong>B</strong> (IPv6)</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">2</div><p>IPv6 router <strong>B</strong> at tunnel entrance takes the ENTIRE IPv6 datagram → puts it in the <strong>data field of an IPv4 datagram</strong></p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">3</div><p>IPv4 routers C, D in the tunnel treat this as a normal IPv4 datagram → forward it normally (they don't know there's IPv6 inside)</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">4</div><p>IPv6 router <strong>E</strong> at tunnel exit receives IPv4 datagram → sees it contains IPv6 payload (via Protocol field) → extracts IPv6 datagram</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">5</div><p>Router E routes IPv6 datagram to <strong>F</strong> normally ✅</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">IPv6 datagram = <strong>payload</strong> inside IPv4 datagram across the tunnel</li>
+        <li>IPv4 routers in tunnel are unaware of the IPv6 content inside</li>
+        <li class="imp">No information loss (unlike dual-stack translation) — IPv6 datagram preserved intact</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Tunneling = packing a large box (IPv6 datagram) inside a standard postal box (IPv4 datagram). The post office (IPv4 router) handles the outer box normally. At destination, receiver opens outer box, finds inner box intact, and extracts contents.</p>
+    </div>
+    <div class="summary-block">
+      <span class="icon">⚡</span>
+      <p><strong>Quick Summary:</strong> Tunneling = IPv6 packed inside IPv4 to cross IPv4-only regions. No data loss. IPv4 routers treat it as normal IPv4. Exit router extracts IPv6.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ─────────────── FINAL CHEAT SHEET ─────────────── -->
+<article class="slide" id="cheatsheet" style="border-color:var(--yellow);">
+  <div class="slide-header" style="background:linear-gradient(90deg,rgba(249,199,79,0.1),var(--surface));">
+    <div class="slide-num" style="background:var(--yellow);color:#000;">⭐</div>
+    <div class="slide-title">Quick Exam Cheat Sheet – Internet Protocol</div>
+  </div>
+  <div class="slide-body">
+    <table class="comp-table">
+      <tr><th>Concept</th><th>One-Line Summary</th></tr>
+      <tr><td>IPv4 Header</td><td>20 bytes minimum, 13 fields, max datagram = 65,535 bytes</td></tr>
+      <tr><td>TTL</td><td>Decremented by 1 at each router. TTL=0 → packet dropped (prevents loops)</td></tr>
+      <tr><td>Protocol field</td><td>6=TCP, 17=UDP. Used at final destination to pass payload upward</td></tr>
+      <tr><td>Checksum</td><td>Detects header errors. Recomputed at every router (TTL changes). Mismatch → drop</td></tr>
+      <tr><td>Fragmentation</td><td>Split datagram when > MTU. Reassembly ONLY at destination host</td></tr>
+      <tr><td>Fragment ID</td><td>Same ID on all fragments of same datagram</td></tr>
+      <tr><td>Fragment Flag</td><td>Flag=1 → more fragments. Flag=0 → last fragment</td></tr>
+      <tr><td>Fragment Offset</td><td>Byte position ÷ 8. Tells where this piece fits in original</td></tr>
+      <tr><td>IP Address</td><td>32 bits, ~4 billion, belongs to interface (not host), dotted-decimal</td></tr>
+      <tr><td>Subnet</td><td>Group of interfaces with same network prefix. /x = x bits for network</td></tr>
+      <tr><td>CIDR</td><td>a.b.c.d/x format. First x bits = prefix. Managed by ICANN</td></tr>
+      <tr><td>Broadcast</td><td>255.255.255.255 → all hosts on same subnet receive</td></tr>
+      <tr><td>DHCP (DORA)</td><td>Discover→Offer→Request→ACK. Auto-assigns IP, mask, gateway, DNS</td></tr>
+      <tr><td>NAT</td><td>One public IP for many private devices. Uses NAT table (public port ↔ private IP:port)</td></tr>
+      <tr><td>ICMP</td><td>Error reporting. Carried as IP payload. Type+Code fields</td></tr>
+      <tr><td>ping</td><td>ICMP Type 8 (request) + Type 0 (reply)</td></tr>
+      <tr><td>Traceroute</td><td>TTL=1,2,3... Type 11 reveals routers. Type 3 Code 3 stops it</td></tr>
+      <tr><td>IPv6 Address</td><td>128 bits, fixed 40-byte header, no fragmentation at routers</td></tr>
+      <tr><td>IPv6 Removed</td><td>Dropped: Fragmentation, Checksum, Options (→ faster processing)</td></tr>
+      <tr><td>Anycast</td><td>IPv6 address type → delivered to nearest ONE of a group of hosts</td></tr>
+      <tr><td>Dual Stack</td><td>Node supports both IPv4 and IPv6. IPv6→IPv4 conversion loses fields</td></tr>
+      <tr><td>Tunneling</td><td>IPv6 datagram inside IPv4 datagram to cross IPv4-only zones. No data loss</td></tr>
+      <tr><td>Class C (/24)</td><td>254 hosts. Class B (/16) = 65534 hosts. Class A (/8) = 16M hosts</td></tr>
+      <tr><td>MTU</td><td>Max data a link-layer frame can carry. Ethernet=1500 bytes</td></tr>
+    </table>
+  </div>
+</article>
+
+</main>
+
+<footer style="text-align:center;padding:24px;color:var(--text-dim);font-size:12px;border-top:1px solid var(--border);">
+  CCN Unit 4.2 – Internet Protocol Study Notes &nbsp;·&nbsp; Dr. Raja Vara Prasad, IIIT Sri City &nbsp;·&nbsp; <a href="CCN_Unit4_Home.html" style="color:var(--blue);text-decoration:none;">← Back to Home</a>
+</footer>
+
+<script>
+  const slides=document.querySelectorAll(".slide");
+  const navLinks=document.querySelectorAll(".toc a");
+  const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){navLinks.forEach(l=>l.classList.remove("active"));const lk=document.querySelector(`.toc a[href="#${e.target.id}"]`);if(lk){lk.classList.add("active");lk.scrollIntoView({block:"nearest",inline:"center"});}}});},{threshold:0.3,rootMargin:"-60px 0px -40% 0px"});
+  slides.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCN – Unit 4.1: Network Layer</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --surface: #141728;
+    --surface2: #1c2035;
+    --border: #2a2f4a;
+    --blue: #4f9cf9;
+    --blue-glow: rgba(79,156,249,0.18);
+    --red: #ff5e6d;
+    --red-glow: rgba(255,94,109,0.15);
+    --green: #3ecf8e;
+    --green-glow: rgba(62,207,142,0.15);
+    --yellow: #f9c74f;
+    --purple: #b57bee;
+    --text: #e2e8f8;
+    --text-dim: #8892aa;
+    --heading: #ffffff;
+    --tag-bg: #1e2440;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Sora',sans-serif;
+    font-size:15px;
+    line-height:1.7;
+    min-height:100vh;
+  }
+
+  /* ── HEADER ── */
+  .site-header{
+    background:linear-gradient(135deg,#0d0f1a 0%,#141728 40%,#1a1f38 100%);
+    border-bottom:1px solid var(--border);
+    padding:40px 24px 32px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .site-header::before{
+    content:'';
+    position:absolute;inset:0;
+    background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(79,156,249,0.12) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .back-btn{
+    position:absolute;top:20px;left:20px;z-index:10;
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(79,156,249,0.1);
+    border:1px solid rgba(79,156,249,0.3);
+    color:var(--blue);
+    font-size:11px;font-weight:700;letter-spacing:1px;
+    text-transform:uppercase;
+    padding:7px 14px;border-radius:20px;
+    text-decoration:none;
+    transition:all .2s;
+  }
+  .back-btn:hover{background:rgba(79,156,249,0.2);border-color:var(--blue);}
+  .unit-badge{
+    display:inline-block;
+    background:var(--blue-glow);
+    border:1px solid var(--blue);
+    color:var(--blue);
+    font-size:11px;font-weight:700;letter-spacing:3px;
+    text-transform:uppercase;
+    padding:5px 16px;border-radius:20px;
+    margin-bottom:16px;
+  }
+  .site-header h1{
+    font-size:clamp(28px,5vw,52px);font-weight:800;
+    color:var(--heading);letter-spacing:-1px;line-height:1.1;
+  }
+  .site-header h1 span{color:var(--blue);}
+  .site-header p{color:var(--text-dim);margin-top:10px;font-size:14px;}
+
+  /* ── STICKY NAV ── */
+  .toc{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+    padding:14px 16px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;
+  }
+  .toc a{
+    background:var(--tag-bg);
+    color:var(--text-dim);
+    border:1px solid var(--border);
+    padding:5px 13px;
+    border-radius:20px;
+    font-size:11px;font-weight:600;
+    text-decoration:none;letter-spacing:.5px;
+    transition:all .2s;
+    white-space:nowrap;
+  }
+  .toc a:hover{background:var(--blue-glow);border-color:var(--blue);color:var(--blue);}
+  .toc a.active{background:var(--blue-glow);border-color:var(--blue);color:var(--blue);}
+
+  /* ── MAIN ── */
+  .main{max-width:980px;margin:0 auto;padding:32px 16px 80px;}
+
+  /* ── SLIDE CARD ── */
+  .slide{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    margin-bottom:28px;
+    overflow:hidden;
+    transition:border-color .2s;
+    scroll-margin-top: 70px;
+  }
+  .slide:hover{border-color:var(--blue);}
+  .slide-header{
+    background:linear-gradient(90deg,var(--surface2),var(--surface));
+    border-bottom:1px solid var(--border);
+    padding:18px 24px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .slide-num{
+    background:var(--blue);color:#fff;
+    font-weight:800;font-size:12px;
+    min-width:32px;height:32px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .slide-title{font-size:17px;font-weight:700;color:var(--heading);letter-spacing:-.3px;}
+  .slide-body{padding:22px 24px;display:flex;flex-direction:column;gap:18px;}
+
+  /* ── BLOCKS ── */
+  .def-block{background:var(--blue-glow);border-left:3px solid var(--blue);border-radius:0 10px 10px 0;padding:14px 18px;}
+  .def-block .label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .def-block p{color:#c8d8f8;font-size:14px;line-height:1.7;}
+
+  .points-block{background:rgba(255,94,109,0.07);border-left:3px solid var(--red);border-radius:0 10px 10px 0;padding:14px 18px;}
+  .points-block .label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .points-block ul{list-style:none;padding:0;}
+  .points-block li{color:#f8d0d4;font-size:14px;padding:4px 0 4px 20px;position:relative;}
+  .points-block li::before{content:'▸';color:var(--red);position:absolute;left:0;top:4px;font-size:12px;}
+  .points-block li.imp::before{content:'👉';}
+  .points-block li.imp{color:#fff;font-weight:600;}
+
+  .example-block{background:var(--green-glow);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:14px 18px;}
+  .example-block .label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .example-block p,.example-block li{color:#b8f0d8;font-size:14px;line-height:1.7;}
+  .example-block ul{padding-left:18px;margin-top:4px;}
+
+  .diagram-block{background:rgba(181,123,238,0.08);border-left:3px solid var(--purple);border-radius:0 10px 10px 0;padding:14px 18px;}
+  .diagram-block .label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .flow-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+  .step-num{background:var(--purple);color:#fff;font-size:11px;font-weight:700;min-width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .flow-step p{color:#dbbef8;font-size:14px;}
+  .flow-arrow{text-align:center;color:var(--purple);font-size:18px;margin:2px 0;}
+
+  .summary-block{background:linear-gradient(90deg,rgba(249,199,79,0.1),rgba(249,199,79,0.03));border:1px solid rgba(249,199,79,0.25);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:12px;}
+  .summary-block .icon{font-size:20px;flex-shrink:0;}
+  .summary-block p{color:var(--yellow);font-size:13px;line-height:1.6;}
+
+  .problem-block{background:rgba(249,199,79,0.06);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;padding:14px 18px;}
+  .problem-block .label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--yellow);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .problem-block p,.problem-block li{color:#fef3cc;font-size:14px;line-height:1.8;}
+  .problem-block ul{padding-left:18px;}
+  .step-box{background:rgba(249,199,79,0.08);border-radius:8px;padding:10px 14px;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--yellow);}
+
+  .comp-table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px;}
+  .comp-table th{background:var(--surface2);color:var(--blue);padding:9px 12px;text-align:left;border:1px solid var(--border);font-weight:700;}
+  .comp-table td{padding:8px 12px;border:1px solid var(--border);color:var(--text-dim);vertical-align:top;}
+  .comp-table tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
+  .comp-table .good{color:var(--green);}
+  .comp-table .warn{color:var(--yellow);}
+  .comp-table .bad{color:var(--red);}
+
+  .formula{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--yellow);text-align:center;margin:8px 0;}
+
+  @media(max-width:600px){.slide-body{padding:16px;}.toc{padding:10px 8px;}.back-btn{font-size:10px;padding:5px 10px;}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="back-btn" href="index.html">← Home</a>
+  <div class="unit-badge">CCN · Unit 4.1</div>
+  <h1>Network <span>Layer</span></h1>
+  <p>Forwarding · Routing · VC vs Datagram · Router Internals · SDN &nbsp;·&nbsp; Exam Ready</p>
+</header>
+
+<nav class="toc">
+  <a href="#s1">S1: Overview</a>
+  <a href="#s2">S2: Forwarding</a>
+  <a href="#s3">S3: Routing</a>
+  <a href="#s4">S4: Connection Setup</a>
+  <a href="#s5">S5: Service Models</a>
+  <a href="#s6">S6: CBR &amp; ABR</a>
+  <a href="#s7">S7: VC vs Datagram</a>
+  <a href="#s8">S8: Virtual Circuit</a>
+  <a href="#s9">S9: VC Table</a>
+  <a href="#s10">S10: VC Numbers</a>
+  <a href="#s11">S11: VC Phases</a>
+  <a href="#s12">S12: Datagram</a>
+  <a href="#s13">S13: Prefix Match</a>
+  <a href="#s14">S14: VC vs DG Compare</a>
+  <a href="#s15">S15: Internet DG</a>
+  <a href="#s16">S16: Router Inside</a>
+  <a href="#s17">S17: Router Components</a>
+  <a href="#s18">S18: Forwarding Plane</a>
+  <a href="#s19">S19: Input Processing</a>
+  <a href="#s20">S20: TCAM &amp; Lookup</a>
+  <a href="#s21">S21: Blocking</a>
+  <a href="#s22">S22: Switching Types</a>
+  <a href="#s23">S23: Switch Memory</a>
+  <a href="#s24">S24: Switch Bus</a>
+  <a href="#s25">S25: Crossbar</a>
+  <a href="#s26">S26: Output Processing</a>
+  <a href="#s27">S27: Queuing</a>
+  <a href="#s28">S28: Scheduler &amp; RED</a>
+  <a href="#s29">S29: HOL Blocking</a>
+  <a href="#s30">S30: Routing Plane &amp; SDN</a>
+  <a href="#cheatsheet">⭐ Cheat Sheet</a>
+</nav>
+
+<main class="main">
+
+<article class="slide" id="s1">
+  <div class="slide-header"><div class="slide-num">1</div><div class="slide-title">Network Layer – Overview</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>Network Layer</strong> is Layer 3 of the OSI model. It is responsible for moving data packets from the source computer to the destination computer across multiple networks, using routers and IP addresses.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">3 Functionalities: Forwarding, Routing, Connection Setup</li>
+        <li class="imp">4 Services: Guaranteed Delivery, Bounded Delay, In-order Delivery, Max Jitter</li>
+        <li>Topics: Router internals, IP, IPv4/IPv6, NAT, Fragmentation, ICMP</li>
+        <li>Network Layer = Layer 3 = Uses IP Addresses</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Simple Analogy</div>
+      <p>Think of the Network Layer as the <strong>postal system of the internet</strong> — just like the post office decides the route for a letter, the Network Layer decides the route for data packets.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Network Layer = Layer 3. It handles forwarding (local), routing (global path), and connection setup using routers.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s2">
+  <div class="slide-header"><div class="slide-num">2</div><div class="slide-title">Forwarding</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Forwarding</strong> is the process of moving a packet from the incoming link to the correct outgoing link within a <em>single router</em>, using its forwarding table.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Every router has a <strong>Forwarding Table</strong></li>
+        <li>Router reads the header value of the arriving packet</li>
+        <li>It uses that value to look up the forwarding table</li>
+        <li>The table gives the output link interface number</li>
+        <li class="imp">Forwarding is a <strong>local, per-router action</strong></li>
+        <li>Routing algorithm builds the forwarding table</li>
+      </ul>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 How Forwarding Works</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Routing Algorithm runs → Creates the Local Forwarding Table</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">2</div><p>Packet arrives with header value <strong>0111</strong></p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">3</div><p>Router looks up table: 0111 → Output Link <strong>2</strong></p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">4</div><p>Packet is sent out through Output Link 2 ✅</p></div>
+      <p style="color:#dbbef8;font-size:13px;margin-top:10px;"><strong>Table:</strong> 0100→Link3 | 0101→Link2 | 0111→Link2 | 1001→Link1</p>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Real-Life Example</div>
+      <p>Hotel reception: Guest (packet) arrives → receptionist (router) checks room number (header) in register (forwarding table) → directs to correct floor (output link).</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Forwarding = local action at ONE router. Uses forwarding table. Header value → output link.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s3">
+  <div class="slide-header"><div class="slide-num">3</div><div class="slide-title">Routing</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Routing</strong> is the process of finding the best path for packets to travel from source to destination, involving <em>all routers</em> in the network communicating via routing protocols.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Routing involves ALL routers in the network (not just one)</li>
+        <li>Routers talk to each other via <strong>Routing Protocols</strong></li>
+        <li>Routing Algorithms can be: <strong>Centralized</strong> or <strong>Decentralized</strong></li>
+        <li class="imp">L2 Switches → forward based on <strong>MAC addresses (Link Layer)</strong></li>
+        <li class="imp">L3 Routers → forward based on <strong>IP addresses (Network Layer)</strong></li>
+        <li class="imp">Routers do NOT run Application or Transport layer protocols</li>
+      </ul>
+    </div>
+    <table class="comp-table">
+      <tr><th>Feature</th><th>Forwarding</th><th>Routing</th></tr>
+      <tr><td>Scope</td><td class="good">Single Router</td><td class="warn">Entire Network</td></tr>
+      <tr><td>Speed</td><td class="good">Very Fast (Hardware)</td><td class="warn">Slower (Software)</td></tr>
+      <tr><td>Function</td><td>Move packet to output</td><td>Calculate best path</td></tr>
+    </table>
+    <div class="example-block">
+      <div class="label">🟢 Real-Life Example</div>
+      <p><strong>Routing</strong> = Google Maps planning entire route Chennai→Mumbai. <strong>Forwarding</strong> = Each traffic signal directing you left/right at that intersection.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Routing = global path planning by all routers. Forwarding = local action at one router. L2 uses MAC, L3 uses IP.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s4">
+  <div class="slide-header"><div class="slide-num">4</div><div class="slide-title">Connection Setup &amp; Network Service Models</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Connection Setup</strong> is a process where routers along the chosen path must exchange "handshake" messages to prepare state <em>before</em> any data packets can flow.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li>Only some network architectures require connection setup</li>
+        <li class="imp">Routers along path must <strong>handshake</strong> before data flows</li>
+        <li class="imp">NSM defines characteristics of <strong>end-to-end packet transport</strong></li>
+        <li>NSM answers: reliable delivery? in-order? timing? congestion feedback?</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Real-Life Example</div>
+      <p>Connection setup = <strong>booking a train ticket</strong> before travelling — you first reserve seat (setup), confirm path (route), then train runs (data transfer). No booking = datagram style.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Connection setup = pre-data handshake. NSM defines delivery guarantees, ordering, timing, congestion feedback.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s5">
+  <div class="slide-header"><div class="slide-num">5</div><div class="slide-title">Network Service Model – 5 Types</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>Network Service Model</strong> defines the promises of end-to-end packet delivery between sending and receiving end systems.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 All 5 Services</div>
+      <ul>
+        <li class="imp"><strong>1. Guaranteed Delivery</strong> – Packet WILL reach destination (no loss)</li>
+        <li class="imp"><strong>2. Guaranteed Delivery with Bounded Delay</strong> – Within a fixed time (e.g., 100ms)</li>
+        <li class="imp"><strong>3. In-Order Packet Delivery</strong> – Arrive in same order as sent</li>
+        <li class="imp"><strong>4. Guaranteed Minimal Bandwidth</strong> – Minimum data rate guaranteed</li>
+        <li class="imp"><strong>5. Security Services</strong> – Source encrypts, destination decrypts</li>
+        <li><strong>Jitter</strong> = variation in time between successive packet arrivals</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Real-Life Examples</div>
+      <ul>
+        <li>Guaranteed Delivery = Registered post</li>
+        <li>Bounded Delay = Express courier (within 24 hrs)</li>
+        <li>In-Order = Numbered parcel delivery</li>
+        <li>Jitter control = Smooth video call (no stuttering)</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> 5 services: Delivery, Bounded Delay, In-order, Min Bandwidth, Security. Jitter = variation in packet arrival time.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s6">
+  <div class="slide-header"><div class="slide-num">6</div><div class="slide-title">Network Architecture: Internet, CBR &amp; ABR</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>CBR</strong> = ATM service for real-time audio/video with fixed dedicated bandwidth. <strong>ABR</strong> = ATM service with guaranteed minimum rate (MCR) but can go higher if bandwidth available.</p>
+    </div>
+    <table class="comp-table">
+      <tr><th>Network</th><th>Service Model</th><th>Bandwidth</th><th>No-Loss</th><th>Ordering</th><th>Congestion</th></tr>
+      <tr><td>Internet</td><td>Best Effort</td><td class="bad">None</td><td class="bad">None</td><td class="warn">Any order</td><td class="bad">None</td></tr>
+      <tr><td>ATM CBR</td><td>CBR</td><td class="good">Guaranteed constant</td><td class="good">Yes</td><td class="good">In order</td><td class="good">Will not occur</td></tr>
+      <tr><td>ATM ABR</td><td>ABR</td><td class="warn">Guaranteed minimum</td><td class="bad">None</td><td class="good">In order</td><td class="warn">Indication given</td></tr>
+    </table>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Internet = <strong>Best Effort</strong> = NO guarantees at all</li>
+        <li class="imp">CBR = fixed bandwidth, for real-time voice/video</li>
+        <li>ABR guarantees MCR (Minimum Cell Rate); faster if network is free</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Internet = Best Effort (no guarantee). ATM CBR = fixed rate. ATM ABR = min rate + congestion signal.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s7">
+  <div class="slide-header"><div class="slide-num">7</div><div class="slide-title">Virtual-Circuit vs Datagram Networks</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Virtual-Circuit (VC)</strong> = Connection-oriented; path set up before data flows. <strong>Datagram</strong> = Connectionless; each packet sent independently with no prior setup.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Connection service at Network Layer → <strong>Virtual Circuit (VC)</strong></li>
+        <li class="imp">Connectionless service at Network Layer → <strong>Datagram</strong></li>
+        <li>Examples of VC: ATM, Frame Relay</li>
+        <li class="imp">Example of Datagram: <strong>Internet (IP)</strong></li>
+      </ul>
+    </div>
+    <table class="comp-table">
+      <tr><th>Feature</th><th>Virtual Circuit</th><th>Datagram</th></tr>
+      <tr><td>Connection</td><td class="warn">Required (setup)</td><td class="good">Not required</td></tr>
+      <tr><td>Path</td><td class="good">Fixed for all packets</td><td class="warn">Different per packet</td></tr>
+      <tr><td>Ordering</td><td class="good">In order</td><td class="bad">May be out of order</td></tr>
+      <tr><td>Example</td><td>ATM, Frame Relay</td><td>Internet (IP)</td></tr>
+    </table>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p><strong>VC</strong> = Train with reserved seats — fixed path. <strong>Datagram</strong> = Letters by post — each may go through different post offices.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> VC = connection-oriented, fixed path. Datagram = connectionless. Internet uses Datagram.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s8">
+  <div class="slide-header"><div class="slide-num">8</div><div class="slide-title">Virtual Circuit – Structure &amp; Working</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A <strong>Virtual Circuit (VC)</strong> is a logical path where a fixed route is established from source to destination, and all packets follow that same path using VC numbers assigned per link.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">A VC consists of 3 things: (1) Path, (2) VC numbers, (3) Forwarding table entries</li>
+        <li>Each packet carries a <strong>VC number</strong> in its header</li>
+        <li class="imp">VC number can be <strong>different on each link</strong></li>
+        <li>Each router replaces old VC number with new one from its forwarding table</li>
+        <li>Examples: <strong>ATM and Frame Relay</strong></li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Relay race: Each runner (link) carries a baton (VC number). At each handoff, baton gets re-tagged with new number for that leg. Identity continues but tag changes at each hop.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> VC = path + VC numbers + forwarding table entries. VC number changes (translated) at every router. ATM and Frame Relay use VC.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s9">
+  <div class="slide-header"><div class="slide-num">9</div><div class="slide-title">Virtual Circuit – Forwarding Table</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The VC forwarding table maps an <strong>incoming interface + VC number</strong> to an <strong>outgoing interface + new VC number</strong>, enabling packet forwarding along the virtual circuit.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 R1's Forwarding Table Example</div>
+      <table class="comp-table" style="margin-top:8px;">
+        <tr><th>Incoming Interface</th><th>Incoming VC#</th><th>Outgoing Interface</th><th>Outgoing VC#</th></tr>
+        <tr><td>1</td><td>12</td><td>2</td><td class="good">22 (translated)</td></tr>
+        <tr><td>2</td><td>63</td><td>1</td><td class="good">18 (translated)</td></tr>
+        <tr><td>3</td><td>7</td><td>2</td><td class="good">17 (translated)</td></tr>
+        <tr><td>1</td><td>97</td><td>3</td><td class="good">87 (translated)</td></tr>
+      </table>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">4 columns: Incoming Interface, Incoming VC#, Outgoing Interface, Outgoing VC#</li>
+        <li>VC number is <strong>swapped (translated)</strong> at every router</li>
+        <li>Multiple VCs can share same physical links (different VC numbers distinguish them)</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> VC table translates VC numbers at each router. Each row = incoming link/VC# → outgoing link/VC#.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s10">
+  <div class="slide-header"><div class="slide-num">10</div><div class="slide-title">Why Different VC Numbers on Each Link?</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>VC numbers change per-link for efficiency, independence, and reduced coordination overhead.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 3 Reasons</div>
+      <ul>
+        <li class="imp"><strong>Reason 1 – Smaller Header:</strong> Per-link numbers are locally scoped (smaller) → fewer bits needed in header</li>
+        <li class="imp"><strong>Reason 2 – Independence:</strong> Each link chooses own VC number independently without coordination</li>
+        <li class="imp"><strong>Reason 3 – No Coordination Overhead:</strong> Global VC number would require all routers to agree → very inefficient</li>
+        <li>New VC → <strong>entry ADDED</strong> to forwarding table</li>
+        <li>VC terminates → <strong>entries REMOVED</strong> from all forwarding tables on path</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Per-link VC numbers = smaller header + independent + no coordination. New VC → add entry. VC ends → remove entry.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s11">
+  <div class="slide-header"><div class="slide-num">11</div><div class="slide-title">Virtual Circuit – 3 Phases</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>Every Virtual Circuit goes through <strong>3 phases</strong>: Setup, Data Transfer, and Teardown. Routers must maintain connection state during all phases.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 3 Phases Flow</div>
+      <div class="flow-step"><div class="step-num">1</div><p><strong>VC Setup:</strong> Transport layer → Network layer → specifies receiver → Network layer finds path, assigns VC numbers, adds forwarding table entries, may reserve bandwidth</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">2</div><p><strong>Data Transfer:</strong> Packets flow along established VC path with VC numbers</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">3</div><p><strong>VC Teardown:</strong> Sender/receiver signals end → Network layer removes forwarding table entries at all routers on path</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">VC routers must maintain <strong>connection state information</strong></li>
+        <li class="imp"><strong>Signaling Messages</strong> = messages to initiate/terminate a VC</li>
+        <li>Protocols governing these = <strong>Signaling Protocols</strong></li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p><strong>Phase 1</strong> = Dialing phone (network finds path). <strong>Phase 2</strong> = Talking. <strong>Phase 3</strong> = Hanging up (resources freed).</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> VC has 3 phases: Setup → Data Transfer → Teardown. Signaling messages used for setup/teardown. Routers store connection state.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s12">
+  <div class="slide-header"><div class="slide-num">12</div><div class="slide-title">Datagram Network</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A <strong>Datagram Network</strong> is connectionless — each packet carries the destination address and is forwarded independently by routers using their forwarding tables. No connection setup needed.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">No connection setup — just stamp address and send</li>
+        <li>Each router uses destination address to look up forwarding table</li>
+        <li class="imp">IPv4 addresses are <strong>32 bits</strong> = 2³² = over <strong>4 billion</strong> possible addresses</li>
+        <li class="imp">Solution: Routers use <strong>Address Prefix Matching</strong> (not exact address)</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Letter by post: Write destination address → drop in mailbox → each post office (router) independently decides the next hop. No path booked in advance.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Datagram = connectionless, no setup. Each packet routed independently. IPv4 = 32 bits = 4 billion addresses.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s13">
+  <div class="slide-header"><div class="slide-num">13</div><div class="slide-title">Longest Prefix Matching</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Longest Prefix Matching</strong>: when a destination address matches multiple entries in the forwarding table, the router picks the entry with the <em>longest</em> (most specific) matching prefix.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li>Routers store address <strong>prefixes</strong>, not full addresses</li>
+        <li class="imp"><strong>Longest Prefix = Most Specific Match = Always Chosen</strong></li>
+        <li>"Otherwise" entry = <strong>Default route</strong> for all unmatched addresses</li>
+      </ul>
+    </div>
+    <div class="problem-block">
+      <div class="label">📐 Numerical Problem</div>
+      <p><strong>Forwarding Table:</strong></p>
+      <div class="step-box">Prefix: 11001000 00010111 00010    → Link 0
+Prefix: 11001000 00010111 00011000 → Link 1
+Prefix: 11001000 00010111 00011    → Link 2
+otherwise                          → Link 3</div>
+      <p><strong>Address 2:</strong> 11001000 00010111 00011000 10101010</p>
+      <div class="step-box">Matches: 11001000 00010111 00011000 (24 bits) → Link 1
+Also matches: 11001000 00010111 00011 (21 bits) → Link 2
+Longest match = 24 bits → Output: Link Interface 1 ✅</div>
+      <p style="color:#fef3cc;margin-top:8px;"><strong>Q:</strong> Address = 11001000 00010111 00100000 00000001 → Which link?</p>
+      <p style="color:#f9c74f;font-size:13px;">Answer: No prefix matches → Default "otherwise" → Link 3 ✅</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Multiple prefixes match → choose LONGEST. "Otherwise" = default route (Link 3).</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s14">
+  <div class="slide-header"><div class="slide-num">14</div><div class="slide-title">VC vs Datagram – Forwarding Table Update Speed</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>VC forwarding tables update every time a connection is set up or torn down (microseconds). Datagram tables update slowly via routing protocols (every 1–5 minutes).</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Datagram: table updates every <strong>1–5 minutes</strong> (slow)</li>
+        <li class="imp">VC: table updates at <strong>microsecond</strong> speed (fast)</li>
+        <li class="imp">Datagram: tables can change anytime → packets may take <strong>different paths</strong> → may arrive <strong>out of order</strong></li>
+        <li>VC: all packets follow fixed path → always in order</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> VC table updates = microseconds. Datagram table = every 1–5 minutes. Datagram packets may arrive out of order.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s15">
+  <div class="slide-header"><div class="slide-num">15</div><div class="slide-title">Why Internet Uses Datagram (Best Effort)</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The Internet uses Datagram + <strong>Best Effort service</strong> because it keeps the network layer simple, works over any technology, and moves reliability to end systems (TCP).</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 5 Reasons</div>
+      <ul>
+        <li class="imp">1. End systems are smart → handle reliability (TCP), ordering, congestion</li>
+        <li class="imp">2. Minimal guarantees → minimal requirements on routers</li>
+        <li class="imp">3. Works over ANY link: Ethernet, WiFi, Satellite, Fiber, Radio</li>
+        <li>4. Easier to interconnect very different network technologies</li>
+        <li class="imp">5. Easy to add new services: just attach host + define new app protocol</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Internet = Datagram + Best Effort. Reliability handled by TCP. Works over any link type. Easy to scale.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s16">
+  <div class="slide-header"><div class="slide-num">16</div><div class="slide-title">Inside a Router – 4 Components</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A router has <strong>4 main components</strong>: Input Port, Switching Fabric, Output Port, and Routing Processor.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Router Architecture</div>
+      <div class="flow-step"><div class="step-num">A</div><p><strong>Input Port</strong> – Packet arrives. Physical layer + link layer + lookup functions.</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">B</div><p><strong>Switching Fabric</strong> – Transfers packet from input port to correct output port.</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">C</div><p><strong>Output Port</strong> – Buffers packet then transmits on outgoing link.</p></div>
+      <p style="color:#dbbef8;margin-top:10px;"><strong>+ Routing Processor</strong> = Control plane = runs routing protocols + computes forwarding table.</p>
+      <p style="color:#dbbef8;margin-top:6px;"><strong>Control Plane</strong> = Software | <strong>Data Plane</strong> = Hardware</p>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Post office: <strong>Input Port</strong> = receiving counter | <strong>Switching Fabric</strong> = conveyor belt | <strong>Output Port</strong> = dispatch counter | <strong>Routing Processor</strong> = sorting supervisor</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> 4 parts: Input Port, Switching Fabric, Output Port, Routing Processor. Control Plane = software. Data Plane = hardware.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s17">
+  <div class="slide-header"><div class="slide-num">17</div><div class="slide-title">Router Component Functions (Detailed)</div></div>
+  <div class="slide-body">
+    <div class="points-block">
+      <div class="label">🔴 Functions of Each Component</div>
+      <ul>
+        <li class="imp"><strong>Input Port:</strong> Physical layer (receives bits) + Link layer (decapsulation) + Lookup (finds output port). Control packets → forwarded to Routing Processor.</li>
+        <li class="imp"><strong>Switching Fabric:</strong> Connects all input ports to all output ports. A network INSIDE the router!</li>
+        <li class="imp"><strong>Output Port:</strong> Stores packets from switching fabric → transmits on outgoing link with link-layer encapsulation</li>
+        <li class="imp"><strong>Routing Processor:</strong> Executes routing protocols (OSPF, BGP, RIP) + maintains routing tables + computes forwarding table + network management</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Input = receive + lookup. Fabric = internal transfer. Output = buffer + transmit. Routing Processor = routing protocols + forwarding table.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s18">
+  <div class="slide-header"><div class="slide-num">18</div><div class="slide-title">Forwarding Plane vs Control Plane</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>Forwarding Plane</strong> (hardware) moves packets at nanosecond speed. The <strong>Control Plane</strong> (software) makes routing decisions at millisecond speed.</p>
+    </div>
+    <div class="problem-block">
+      <div class="label">📐 Numerical: Why Hardware is Needed</div>
+      <p><strong>Given:</strong> 10 Gbps input link, 64-byte IP datagram</p>
+      <div class="step-box">Packet size  = 64 × 8 = 512 bits
+Link speed   = 10 × 10⁹ bps
+Time available = 512 / 10,000,000,000 = 51.2 nanoseconds ⚡
+→ WAY too fast for software → MUST be hardware</div>
+    </div>
+    <table class="comp-table">
+      <tr><th>Property</th><th>Forwarding Plane</th><th>Control Plane</th></tr>
+      <tr><td>Speed</td><td class="good">Nanoseconds</td><td class="warn">Milliseconds</td></tr>
+      <tr><td>Implementation</td><td class="good">Hardware</td><td class="warn">Software</td></tr>
+      <tr><td>Function</td><td>Move packets</td><td>Decide routes</td></tr>
+    </table>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> At 10Gbps, only 51.2ns per packet → needs hardware. Forwarding Plane = hardware (ns). Control Plane = software (ms).</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s19">
+  <div class="slide-header"><div class="slide-num">19</div><div class="slide-title">Input Processing – 3 Stages</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Input Processing</strong> has 3 stages: physical layer reception → link layer processing → forwarding table lookup and queuing.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Input Processing Pipeline</div>
+      <div class="flow-step"><div class="step-num">1</div><p><strong>Line Termination:</strong> Receives raw bits (Physical Layer)</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">2</div><p><strong>Data Link Processing:</strong> Decapsulates frame, checks CRC, handles link protocol</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">3</div><p><strong>Lookup + Forwarding + Queuing:</strong> Looks up destination in forwarding table → finds output port → queues for switching fabric ⭐</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Other Input Tasks</div>
+      <ul>
+        <li class="imp">Check packet's <strong>Version Number</strong> (IPv4 or IPv6?)</li>
+        <li class="imp">Check <strong>Checksum</strong> → rewrite after TTL change</li>
+        <li class="imp"><strong>TTL</strong> → decremented by 1 at EVERY router; TTL=0 → packet DROPPED</li>
+        <li>Update network management counters</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Input = Physical → Link → Lookup → Queue. TTL decremented by 1 at every router. TTL=0 → packet dropped.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s20">
+  <div class="slide-header"><div class="slide-num">20</div><div class="slide-title">Shadow Copy, TCAM &amp; Advanced Lookup</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A <strong>shadow copy</strong> of the forwarding table is stored at each input port for local fast lookup. <strong>TCAM</strong> = ultra-fast memory that finds longest prefix matches in one clock cycle.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp"><strong>Shadow Copy</strong> = Copy of forwarding table at each input port → no central bottleneck</li>
+        <li>Called <strong>Distributed Forwarding</strong></li>
+        <li class="imp">At Gigabit speeds → lookup must happen in <strong>nanoseconds</strong></li>
+        <li class="imp"><strong>DRAM</strong> → fast but not fastest</li>
+        <li class="imp"><strong>SRAM</strong> → faster than DRAM</li>
+        <li class="imp"><strong>TCAM</strong> → searches ALL entries simultaneously in ONE clock cycle. Supports 0, 1, or "don't care (X)" → perfect for prefix matching</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p><strong>Shadow copy</strong> = Each employee has own phone directory. <strong>TCAM</strong> = Magic phonebook that finds a name INSTANTLY — all pages searched at once.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Shadow copy at each input → avoids bottleneck. TCAM = fastest memory, searches all entries in 1 cycle.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s21">
+  <div class="slide-header"><div class="slide-num">21</div><div class="slide-title">Blocking at Input Port</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A packet at an input port may be <strong>temporarily blocked</strong> from entering the switching fabric if it is currently busy. The packet is queued at the input port.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">If switching fabric busy → packet <strong>queued at input port</strong></li>
+        <li>Scheduled to cross fabric at later time</li>
+        <li class="imp">Other tasks: (1) Physical + link layer processing (2) Check version, checksum, TTL → rewrite (3) Update network management counters</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Fabric busy → packet queued at input port. 3 additional tasks: physical/link, check/rewrite TTL+checksum, update counters.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s22">
+  <div class="slide-header"><div class="slide-num">22</div><div class="slide-title">Switching – 3 Types Overview</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Switching</strong> physically moves a packet from an input port to the correct output port. 3 types: Memory, Bus, and Crossbar.</p>
+    </div>
+    <table class="comp-table">
+      <tr><th>Type</th><th>Method</th><th>Speed</th><th>Limitation</th></tr>
+      <tr><td class="good">Memory</td><td>CPU copies packet via RAM</td><td class="bad">Slowest</td><td>Limited by memory bandwidth</td></tr>
+      <tr><td class="warn">Bus</td><td>Shared internal bus</td><td class="warn">Medium</td><td>Only 1 packet at a time</td></tr>
+      <tr><td>Crossbar</td><td>Grid of switches</td><td class="good">Fastest (parallel)</td><td>Conflict if same output port</td></tr>
+    </table>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Memory (slowest, CPU), Bus (medium, shared), Crossbar (fastest, parallel). Modern routers use Crossbar.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s23">
+  <div class="slide-header"><div class="slide-num">23</div><div class="slide-title">Switching via Memory</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Switching via Memory</strong>: the CPU (routing processor) directly controls copying packets from input port memory to output port memory.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 How Memory Switching Works</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Packet arrives at input port A</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">2</div><p>Input port signals CPU → CPU gets an <strong>Interrupt</strong></p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">3</div><p>CPU reads packet into <strong>main memory (RAM)</strong> → performs lookup → copies to output port Y buffer</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Oldest method — CPU controlled</li>
+        <li class="imp">Packet copied <strong>TWICE</strong> through memory: input→memory→output</li>
+        <li>Bottleneck = <strong>memory bandwidth</strong></li>
+        <li class="imp">Example: <strong>Cisco Catalyst 8500 series</strong></li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> CPU controlled, packet copied twice through RAM. Slowest. Bottleneck = memory bandwidth. Cisco Catalyst 8500.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s24">
+  <div class="slide-header"><div class="slide-num">24</div><div class="slide-title">Switching via a Bus</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Bus Switching</strong>: input port puts packet on a shared bus with a label indicating destination output port. All output ports see it but only the matching one accepts it.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 How Bus Switching Works</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Input port prepends <strong>switch-internal label</strong> (e.g., "go to output X")</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">2</div><p>Packet placed on <strong>shared bus</strong> → ALL output ports receive it</p></div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step"><div class="step-num">3</div><p>Only output port <strong>X</strong> (label match) keeps packet. Label removed before exit ✅</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Shared bus → only <strong>ONE packet on bus at a time</strong></li>
+        <li class="imp">Router switching speed = <strong>limited by bus speed</strong></li>
+        <li>Good for small/medium routers only</li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Shared bus, label tells which output keeps packet. Only 1 packet at a time. Speed limited by bus bandwidth.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s25">
+  <div class="slide-header"><div class="slide-num">25</div><div class="slide-title">Switching via Crossbar</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A <strong>Crossbar Switch</strong> is an interconnection network of 2N buses connecting N input ports to N output ports. Multiple packets can be forwarded <em>simultaneously</em> in parallel.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Crossbar Grid Explanation</div>
+      <div class="flow-step"><div class="step-num">1</div><p>N input ports have <strong>horizontal buses</strong>, N output ports have <strong>vertical buses</strong></p></div>
+      <div class="flow-step"><div class="step-num">2</div><p>At each intersection = a <strong>crosspoint</strong> that can open/close</p></div>
+      <div class="flow-step"><div class="step-num">3</div><p>To send A→X: close crosspoint at (A row, X column). Simultaneously B→Y and C→Z → <strong>parallel forwarding</strong> ⚡</p></div>
+      <div class="flow-step"><div class="step-num">4</div><p>If A and B both want output X → one must wait (output conflict)</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Crossbar = <strong>2N buses</strong> connecting N inputs to N outputs</li>
+        <li class="imp">Multiple packets forwarded <strong>in parallel</strong> if different output ports</li>
+        <li class="imp">Fastest — used in <strong>modern high-performance routers</strong></li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Crossbar = 2N buses, N×N grid. Parallel forwarding possible. Fastest. Conflict only if two packets target same output port.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s26">
+  <div class="slide-header"><div class="slide-num">26</div><div class="slide-title">Output Processing</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Output Processing</strong>: receives packets from switching fabric, buffers them, then transmits using appropriate link-layer and physical-layer functions.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 Output Port Pipeline</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Switch Fabric → Output Port</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">2</div><p><strong>Queuing (Buffer Management)</strong> – Multiple packets stored in queue</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">3</div><p><strong>Data Link Processing</strong> – Encapsulate with link-layer header/trailer</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-num">4</div><p><strong>Line Termination</strong> – Convert to physical signal → send ✅</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li>Output = <strong>reverse</strong> of input processing</li>
+        <li class="imp">Buffer full → <strong>Packet Loss!</strong></li>
+      </ul>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Output = Fabric → Queue → Encapsulate → Transmit. Buffer full = packet loss. Reverse of input.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s27">
+  <div class="slide-header"><div class="slide-num">27</div><div class="slide-title">Queuing at Input and Output Ports</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>Packet Queuing</strong> occurs when packets arrive faster than they can be processed. If queues overflow → <strong>packet loss</strong>.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">R_line = link rate | R_switch = switching fabric rate</li>
+        <li class="imp">If R_switch = N × R_line → <strong>negligible queuing</strong> at input ports</li>
+        <li class="imp">If all N packets go to SAME output → output bottleneck → memory exhaust → <strong>packet loss</strong></li>
+        <li>Output port can transmit only 1 packet at a time</li>
+      </ul>
+    </div>
+    <div class="problem-block">
+      <div class="label">📐 Concept</div>
+      <div class="step-box">R_switch = 3 × R_line ✅ (no input port queuing)
+BUT output port sends 1 packet/unit time
+→ 3 packets arrive → 2 must queue at OUTPUT
+→ If continues → buffer fills → packet loss ❌</div>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> Output queue when multiple packets target same output. R_switch = N × R_line → no input queue. Memory full → packet loss.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s28">
+  <div class="slide-header"><div class="slide-num">28</div><div class="slide-title">Packet Scheduler, WFQ &amp; RED</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>A <strong>Packet Scheduler</strong> decides which queued packet to send next. <strong>WFQ</strong> shares bandwidth fairly. <strong>RED</strong> proactively drops packets before buffer overflows.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 3 Scheduling Algorithms</div>
+      <ul>
+        <li class="imp"><strong>1. FCFS/FIFO</strong> – Transmit in exact arrival order. No priority.</li>
+        <li class="imp"><strong>2. WFQ</strong> – Different connections get weighted share of bandwidth. High-weight = more bandwidth. Good for QoS.</li>
+        <li class="imp"><strong>3. RED</strong> – Probabilistically marks/drops packets BEFORE buffer is full. Signals congestion early. Prevents sudden large drops.</li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p><strong>FCFS</strong> = Bank queue. <strong>WFQ</strong> = VIP counter (priority customers faster). <strong>RED</strong> = Restaurant stopping reservations before fully booked.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> FCFS = simple fair. WFQ = weighted bandwidth (QoS). RED = proactive drop before buffer full. All manage output queues.</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s29">
+  <div class="slide-header"><div class="slide-num">29</div><div class="slide-title">HOL (Head-of-the-Line) Blocking</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p><strong>HOL Blocking</strong> occurs when a packet at the front of a queue is waiting for a busy output port, blocking packets behind it — even if THEIR output ports are free.</p>
+    </div>
+    <div class="diagram-block">
+      <div class="label">📊 HOL Blocking Scenario</div>
+      <div class="flow-step"><div class="step-num">1</div><p>Dark blue packets from Input 1 AND Input 3 both want Upper output port (contention)</p></div>
+      <div class="flow-step"><div class="step-num">2</div><p>Only ONE dark blue can proceed → other waits at <strong>head of queue</strong></p></div>
+      <div class="flow-step"><div class="step-num">3</div><p>Light blue packet is BEHIND the waiting dark blue in queue</p></div>
+      <div class="flow-step"><div class="step-num">4</div><p>Light blue wants <strong>Lower output port</strong> (which is FREE!) but CANNOT move → <strong>HOL Blocked</strong> ❌</p></div>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">HOL Blocking = packet at HEAD blocks packets behind it</li>
+        <li>Occurs at <strong>input ports</strong></li>
+        <li class="imp">Queue grows to <strong>unbounded length</strong></li>
+        <li>Can reduce throughput to <strong>only 58.6%</strong> of maximum</li>
+        <li>Solution: <strong>Virtual Output Queues (VOQ)</strong></li>
+      </ul>
+    </div>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p>Supermarket: Customer ahead has price check issue (blocked). You have 2 items and checkout is free — but you CANNOT move past blocked customer. = HOL blocking.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> HOL = head blocks others even if their output is free. Reduces throughput to ~58.6%. Fix = VOQ (Virtual Output Queues).</p></div>
+  </div>
+</article>
+
+<article class="slide" id="s30">
+  <div class="slide-header"><div class="slide-num">30</div><div class="slide-title">Routing Plane &amp; Software Defined Networking (SDN)</div></div>
+  <div class="slide-body">
+    <div class="def-block">
+      <div class="label">🔵 Definition</div>
+      <p>The <strong>Routing Plane (Control Plane)</strong> runs routing protocols and computes forwarding tables. <strong>SDN</strong> separates the control plane (software) from the data plane (hardware), allowing external controllers to manage routing.</p>
+    </div>
+    <div class="points-block">
+      <div class="label">🔴 Key Points</div>
+      <ul>
+        <li class="imp">Traditional: Control plane runs <strong>inside each router</strong> (decentralized)</li>
+        <li class="imp"><strong>SDN:</strong> Control plane can be <strong>external</strong> to the router</li>
+        <li>A <strong>well-defined API</strong> allows internal and external parts to communicate</li>
+        <li class="imp"><strong>SDN</strong> = separates software control plane from hardware data plane</li>
+        <li>External <strong>SDN Controller</strong> pushes forwarding table entries to hardware routers</li>
+        <li class="imp">SDN heavily used in <strong>Cloud Computing and Data Centers</strong></li>
+      </ul>
+    </div>
+    <table class="comp-table">
+      <tr><th>Property</th><th>Traditional Routing</th><th>SDN</th></tr>
+      <tr><td>Control Plane</td><td class="warn">Inside each router</td><td class="good">External controller</td></tr>
+      <tr><td>Flexibility</td><td class="bad">Low</td><td class="good">High</td></tr>
+      <tr><td>Use Case</td><td>Traditional networks</td><td class="good">Cloud, Data Centers</td></tr>
+    </table>
+    <div class="example-block">
+      <div class="label">🟢 Analogy</div>
+      <p><strong>Traditional</strong> = Each car has own GPS. <strong>SDN</strong> = Central traffic management system tells ALL cars which routes to take.</p>
+    </div>
+    <div class="summary-block"><span class="icon">⚡</span><p><strong>Quick Summary:</strong> SDN = external controller manages multiple routers via API. Control plane = software. Data plane = hardware. Used in cloud/data centers.</p></div>
+  </div>
+</article>
+
+<!-- ─────────────── CHEAT SHEET ─────────────── -->
+<article class="slide" id="cheatsheet" style="border-color:var(--yellow);">
+  <div class="slide-header" style="background:linear-gradient(90deg,rgba(249,199,79,0.1),var(--surface));">
+    <div class="slide-num" style="background:var(--yellow);color:#000;">⭐</div>
+    <div class="slide-title">Quick Exam Cheat Sheet – Network Layer 4.1</div>
+  </div>
+  <div class="slide-body">
+    <table class="comp-table">
+      <tr><th>Concept</th><th>One-Line Summary</th></tr>
+      <tr><td>Forwarding</td><td>Local packet transfer at ONE router using forwarding table</td></tr>
+      <tr><td>Routing</td><td>Global path finding across ALL routers using routing protocols</td></tr>
+      <tr><td>VC Network</td><td>Connection-oriented, fixed path, handshake needed (ATM, Frame Relay)</td></tr>
+      <tr><td>Datagram Network</td><td>Connectionless, no fixed path, no setup (Internet)</td></tr>
+      <tr><td>Best Effort</td><td>Internet service = no delivery/order/timing guarantee</td></tr>
+      <tr><td>CBR</td><td>ATM fixed bandwidth, for real-time voice/video</td></tr>
+      <tr><td>ABR</td><td>ATM minimum rate (MCR) guaranteed, can go higher</td></tr>
+      <tr><td>Longest Prefix Match</td><td>Multiple prefixes match → choose LONGEST one</td></tr>
+      <tr><td>Router Components</td><td>Input Port + Switch Fabric + Output Port + Routing Processor</td></tr>
+      <tr><td>Forwarding Plane</td><td>Hardware, nanosecond speed</td></tr>
+      <tr><td>Control Plane</td><td>Software, millisecond speed (Routing Processor)</td></tr>
+      <tr><td>TCAM</td><td>Searches ALL forwarding table entries simultaneously in 1 clock cycle</td></tr>
+      <tr><td>TTL</td><td>Decremented by 1 at every router; TTL=0 → packet dropped</td></tr>
+      <tr><td>Switching via Memory</td><td>Oldest, CPU-controlled, packet copied twice, bottleneck = memory bandwidth</td></tr>
+      <tr><td>Switching via Bus</td><td>Shared bus, label selects output port, limited by bus speed</td></tr>
+      <tr><td>Crossbar Switch</td><td>2N buses, parallel forwarding, fastest, conflict only on same output</td></tr>
+      <tr><td>HOL Blocking</td><td>Head-of-queue blocks packets behind even if their output is free. Fix = VOQ</td></tr>
+      <tr><td>FCFS</td><td>First come first served, no priority</td></tr>
+      <tr><td>WFQ</td><td>Weighted bandwidth sharing (QoS)</td></tr>
+      <tr><td>RED</td><td>Proactive drops before buffer full to signal congestion</td></tr>
+      <tr><td>SDN</td><td>External controller manages hardware routers via API. Cloud/DC use.</td></tr>
+    </table>
+  </div>
+</article>
+
+</main>
+
+<footer style="text-align:center;padding:24px;color:var(--text-dim);font-size:12px;border-top:1px solid var(--border);">
+  CCN Unit 4.1 – Network Layer &nbsp;·&nbsp; Dr. Raja Vara Prasad, IIIT Sri City &nbsp;·&nbsp;
+  <a href="CCN_Unit4_Home.html" style="color:var(--blue);text-decoration:none;">← Back to Home</a>
+</footer>
+
+<script>
+  // Highlight active nav pill on scroll
+  const slides = document.querySelectorAll('.slide');
+  const navLinks = document.querySelectorAll('.toc a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+        if (link) { link.classList.add('active'); link.scrollIntoView({block:'nearest',inline:'center'}); }
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-60px 0px -40% 0px' });
+  slides.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
